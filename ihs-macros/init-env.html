@@ -1,0 +1,35 @@
+{# DEFINE SOME GLOBALS #}
+
+{# editMode global shall be array, if boolean it seems that will be not initialised properly #}
+{% set editMode = [] %}
+{% set envInfo = {} %}
+
+{# END DEFINE GLOBALS #}
+{# ------------------------------- #}
+
+{# NEEDED MACROS #}
+{% macro get_edit_mode(crtUrl) %}
+    {% if crtUrl is string_containing "/content-rendering/" %}    
+        {% do editMode.append(true) %}
+    {% else %}
+        {% do editMode.append(false) %}
+    {% endif %}
+{% endmacro %}
+
+{% macro get_env_info() %}
+    {{ get_edit_mode(request.full_url) }}
+    {% do envInfo.update({"editMode": editMode[0]}) %}
+    {% do envInfo.update({"portalId": portal_id}) %}
+    {% do envInfo.update({"currentPage": content.name|striptags}) %}
+    {% do envInfo.update({"activeLanguage": content.language}) %}
+
+    {% import "/ihs-settings/site-settings.html" as settings %}
+    {% do envInfo.update({"siteSettings": settings.siteSettings}) %}
+{% endmacro %}
+
+{# END NEEDED MACROS #}
+{# ------------------------------- #}
+
+
+{# NOW DO SOME WORK #}
+{{ get_env_info() }}

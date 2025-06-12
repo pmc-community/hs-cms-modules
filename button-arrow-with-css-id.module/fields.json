@@ -1,0 +1,145 @@
+[
+  {
+    "allow_new_line": false,
+    "default": "Add a button text here",
+    "display_width": null,
+    "id": "button-arrow-with-css-id_button_text",
+    "label": "Button text",
+    "locked": false,
+    "name": "button_text",
+    "required": true,
+    "show_emoji_picker": false,
+    "type": "text",
+    "validation_regex": ""
+  },
+  {
+    "allow_new_line": false,
+    "default": "Add CSS ID here",
+    "display_width": null,
+    "id": "button-arrow-with-css-id_button_css_id",
+    "label": "Button CSS ID",
+    "locked": false,
+    "name": "button_css_id",
+    "required": true,
+    "show_emoji_picker": false,
+    "type": "text",
+    "validation_regex": ""
+  },
+  {
+    "children": [
+      {
+        "default": false,
+        "display": "checkbox",
+        "display_width": null,
+        "id": "button-arrow-with-css-id_override_default_style",
+        "label": "Override default style",
+        "locked": false,
+        "name": "override_default_style",
+        "required": true,
+        "type": "boolean"
+      },
+      {
+        "default": {
+          "color": "#FFFFFF",
+          "font_set": "DEFAULT",
+          "size_unit": "px"
+        },
+        "display_width": null,
+        "id": "button-arrow-with-css-id_button_font",
+        "label": "Button font",
+        "load_external_fonts": true,
+        "locked": false,
+        "name": "button_font",
+        "required": false,
+        "type": "font",
+        "visibility": {
+          "controlling_field": "button-arrow-with-css-id_override_default_style",
+          "controlling_value_regex": "true",
+          "operator": "EQUAL"
+        }
+      },
+      {
+        "default": {
+          "color": "#000000",
+          "opacity": 100
+        },
+        "display_width": null,
+        "id": "button-arrow-with-css-id_button_color",
+        "label": "Button color",
+        "locked": false,
+        "name": "button_color",
+        "required": false,
+        "type": "color",
+        "visibility": {
+          "controlling_field": "button-arrow-with-css-id_override_default_style",
+          "controlling_value_regex": "true",
+          "operator": "EQUAL"
+        }
+      },
+      {
+        "default": {
+          "color": "#000000",
+          "opacity": 100
+        },
+        "display_width": null,
+        "id": "button-arrow-with-css-id_text_hover_color",
+        "label": "Text hover color",
+        "locked": false,
+        "name": "text_hover_color",
+        "required": false,
+        "type": "color",
+        "visibility": {
+          "controlling_field": "button-arrow-with-css-id_override_default_style",
+          "controlling_value_regex": "true",
+          "operator": "EQUAL"
+        }
+      },
+      {
+        "default": {
+          "color": "#CCCCCC",
+          "opacity": 100
+        },
+        "display_width": null,
+        "id": "button-arrow-with-css-id_button_hover_color",
+        "label": "Button hover color",
+        "locked": false,
+        "name": "button_hover_color",
+        "required": false,
+        "type": "color",
+        "visibility": {
+          "controlling_field": "button-arrow-with-css-id_override_default_style",
+          "controlling_value_regex": "true",
+          "operator": "EQUAL"
+        }
+      }
+    ],
+    "default": {
+      "override_default_style": false,
+      "button_font": {
+        "color": "#FFFFFF",
+        "size_unit": "px"
+      },
+      "button_color": {
+        "color": "#000000",
+        "opacity": 100
+      },
+      "text_hover_color": {
+        "color": "#000000",
+        "opacity": 100
+      },
+      "button_hover_color": {
+        "color": "#CCCCCC",
+        "opacity": 100
+      }
+    },
+    "display_width": null,
+    "expanded": false,
+    "id": "button-arrow-with-css-id_style",
+    "label": "Style options",
+    "locked": false,
+    "name": "style",
+    "required": false,
+    "tab": "CONTENT",
+    "type": "group"
+  }
+]

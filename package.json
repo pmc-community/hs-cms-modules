@@ -1,0 +1,12 @@
+{
+    "name": "generate-redux-info",
+    "main": "gen-redux-info.js",
+    "dependencies": {
+        "@hubspot/cli": "^4.1.7",
+        "fs": "^0.0.1-security",
+        "moment": "^2.29.4",
+        "path": "^0.12.7",
+        "to": "^0.2.9",
+        "update": "^0.7.4"
+    }
+}

@@ -1,0 +1,681 @@
+{# clean up the DOM a little bit #} 
+{# some elements (mostly scripts) are not useful anymore after page load #}
+{# that's a bit unfair, is like they did their jobs and now they can die #}
+{% macro clean_after_load(ei) %}
+    
+    {% if ei.siteSettings.cleanAfterLoad.active %}
+        
+        {% set elements =  ei.siteSettings.cleanAfterLoad.elements %}
+        {% set elementsSelector =  elements|join(',') %}
+
+        {% require_js position="footer" %}
+            <script id = "ihs-clean-after-load-script">
+                $(document).ready( () => {
+                    setTimeout( () => {
+                        $('{{elementsSelector}}').remove();
+                    }, 2000);
+                });         
+            </script>
+        {% end_require_js %}
+
+    {%  endif %}
+
+{% endmacro %}
+
+{# load status page widget #}
+{% macro load_status_page(ei)  %}
+
+    {% set siteSet = ei %}
+    {% if siteSet.siteSettings.statusPageWidget.available %}
+        {# need to define parcelRequire, otherwise statuspage raise an error which doesn't affect the functionality but looks bad #} 
+        <script> var parcelRequire; </script>
+
+        {# embed status page #} 
+        {{ require_js("https://cdn.polyfill.io/v2/polyfill.min.js", { position: "footer", async:true, defer:true }) }} 
+        {{ require_js("https://unpkg.com/@webcomponents/webcomponentsjs@" ~ siteSet.siteSettings.statusPageWidget.version ~ "/webcomponents-bundle.js", { position: "footer", async:true, defer:true }) }} 
+        {{ require_js("https://unpkg.com/@statuspage/status-widget/dist/index.js", { position: "footer", async:true, defer:true }) }}
+
+        {% require_js position="footer" %}
+            <script id = "ihs-status-page-script">
+                $(window).on("load", function() {
+                    $('{{siteSet.siteSettings.statusPageWidget.whereToAppend}}').append('<statuspage-widget style="vertical-align: middle !important; height: 1em !important;" src="{{siteSet.siteSettings.statusPageWidget.location}}" appearance="{{siteSet.siteSettings.statusPageWidget.showAs}}"></statuspage-widget>');
+                });         
+            </script>
+        {% end_require_js %}
+
+    {% endif %}
+    
+{% endmacro %}
+
+{# load go-to-top button #}
+{% macro go_to_top_btn(ei) %}
+    {% set siteSet = ei %}
+    {% if siteSet.siteSettings.goToTopBtn.active %}
+
+        <div id="ihs_go_to_top_btn">
+            {% icon icon_set="fontawesome-5.14.0" name="Hand Pointing Up" style="SOLID" height="{{siteSet.siteSettings.goToTopBtn.size}}" purpose="decorative" %}
+        </div>
+        
+        {% require_css %}
+            <style id = "ihs-go-to-top-btn-style">
+                {% scope_css %}
+                    #ihs_go_to_top_btn {
+                        fill: {{siteSet.siteSettings.goToTopBtn.color}};
+                        position: fixed;
+                        bottom: 20px;
+                        right:20px;
+                        cursor: pointer;
+                    }
+
+                    #ihs_go_to_top_btn:hover {
+                        fill: {{siteSet.siteSettings.goToTopBtn.hoverColor}}
+                    }
+                {% end_scope_css %} 
+            </style>
+        {% end_require_css %}
+
+    {% endif %}
+{% endmacro %}
+
+{# load auth0 info in edit mode only #}
+{% macro auth0_info_panel() %}
+    
+    {% set auth0Info = 
+        '<div class="row-fluid-wrapper">
+            <div id = "ihs_auth0_info_edit_mode" class="ihs_auth0_info_edit_mode row-fluid">
+                Authentication with Auth0 is active but cannot be used in edit mode. Check the pre-requisites in frontend and test it (see Site settings).
+            </div
+        </div>' 
+    %}
+
+    {% set auth0Info = auth0Info|replace("\n","") %}
+
+    {% require_js position="footer" %}
+        <script>
+            $(window).on('load', () => { $('main').prepend('{{auth0Info}}'); });
+        </script>
+    {% end_require_js %}
+
+    <style id = "ihs_auth0_info_edit_mode_style">
+
+        .ihs_auth0_info_edit_mode {
+            margin-left:auto;
+            margin-right:auto;
+            margin-top:20px;
+            padding:20px;
+            border: solid 2px #7fd1de;
+            border-radius: 5px;
+            background: #e5f5f8;
+            width:1200px;
+            font-size:14px;
+        }
+
+    </style>
+
+{% endmacro %}
+
+{# load site settings info in edit mode only #}
+{% macro site_settings_info(ei) %}
+
+    {% if ei.editMode && ei.siteSettings.showSiteSettingsInEditor %}
+
+        {% set siteInfo = 
+            '<div class="row-fluid-wrapper">
+                <div id = "ihs_site_info_edit_mode" class="ihs_site_info_edit_mode row-fluid">
+                    **marker_to_be_replaced**
+                </div
+            </div>' 
+        %}
+
+        {% set siteInfoMessage =
+            '<div class="ihs_site_info_edit_mode_message">
+                -- SHOWN IN EDIT AND PREVIEW MODES ONLY --
+            </div>' 
+        %}
+
+        {% set siteInfoTitle = 
+            '<div class="row-fluid ihs_site_info_edit_mode_title_row" > 
+                <div class="ihs_site_info_edit_mode_title span7">
+                    SITE SETTINGS INFORMATION -- SHOWN IN EDIT AND PREVIEW MODES ONLY --
+                </div>
+                <input type="text" name="ihs_site_info_edit_mode_keyword" class="span6 ihs_site_info_edit_mode_search_in_settings" placeholder="search in settings" >
+
+                <span id="ihs_site_info_edit_mode_search_nav_next_btn" title="Next" class="span1 ihs_site_info_edit_mode_search_nav_btn">{% icon icon_set="fontawesome-5.14.0" name="arrow-down" style="SOLID" height="20" purpose="decorative" class="ihs_era_container_header_button_icon" %}</span>
+
+                <span id="ihs_site_info_edit_mode_search_nav_prev_btn" title="Prev" class="span1 ihs_site_info_edit_mode_search_nav_btn">{% icon icon_set="fontawesome-5.14.0" name="arrow-up" style="SOLID" height="20" purpose="decorative" class="ihs_era_container_header_button_icon" %}</span>
+
+                <span id="ihs_site_info_edit_mode_search_nav_clear_search_btn" title="Clear" class="span1 ihs_site_info_edit_mode_search_nav_btn">{% icon icon_set="fontawesome-5.14.0" name="Sync" style="SOLID" height="20" purpose="decorative" class="ihs_era_container_header_button_icon" %}</span>
+            </div>'
+        %}
+
+        {% set siteInfoSeparator = 
+            '<hr class="ihs_site_info_edit_mode_separator">' 
+        %}
+
+        {% set emptySpace = 
+            '<div class="span5 ihs_site_info_edit_mode_info_container_empty"></div>'
+        %}
+
+        {% set siteInfoDynamicHeader =
+            '<div class="span5 ihs_site_info_edit_mode_info_container">
+                <span class="ihs_site_info_edit_mode_info_name">
+                    Dynamic Header: 
+                </span>
+                <span class="ihs_site_info_edit_mode_info" data="{{ei.siteSettings.dynamicPageHeader.active}}">
+                    {{ei.siteSettings.dynamicPageHeader.active}}
+                </span>
+                <div class="ihs_site_info_edit_mode_info_details">
+                    (if true, is active only in full page preview and frontend and makes the header to slide in and out when scrolling the page; if false, the header is fixed)
+                </div>
+            </div>' 
+        %}
+
+        {% set siteInfoGoToTopBtn = 
+            '<div class="span5 ihs_site_info_edit_mode_info_container">
+                
+                <span class="ihs_site_info_edit_mode_info_name">
+                    Go to top button: 
+                </span>
+                <span class="ihs_site_info_edit_mode_info" data="{{ei.siteSettings.goToTopBtn.active}}">
+                    {{ei.siteSettings.goToTopBtn.active}}
+                </span>
+
+                <span class="ihs_site_info_edit_mode_info_name" style="margin-left:5px">
+                    Smart button: 
+                </span>
+                <span class="ihs_site_info_edit_mode_info" data="{{ei.siteSettings.goToTopBtn.smart}}">
+                    {{ei.siteSettings.goToTopBtn.smart}}
+                </span>
+
+                <div class="ihs_site_info_edit_mode_info_details">
+                    (if true, is active only in full page preview and frontend; the button may be HIDDEN behind the default HubSpot chat/help bubble in edit mode; use the browser inspector on the chat/help bubble and set "display:none" for #help-widget or for .isc-help-widget__layout-container to check if the go-to-top button is visible; if false, the go-to-top button is not visible anywhere)
+                </div>
+            </div>'
+        %}
+
+        {% set siteInfoStatusPageWidget = 
+            '<div class="span5 ihs_site_info_edit_mode_info_container">
+                <span class="ihs_site_info_edit_mode_info_name">
+                    Status Page widget: 
+                </span>
+                <span class="ihs_site_info_edit_mode_info" data="{{ei.siteSettings.statusPageWidget.available}}">
+                    {{ei.siteSettings.statusPageWidget.available}}
+                </span>
+                <div class="ihs_site_info_edit_mode_info_details">
+                    (if true, a status page widget generated by statuspage.io is visible on each page, both in edit and frontend modes. before using it, check if your status page is active and properly configured in the settings of this site. the status page widget is visible according to the configuration set in the settings of this site. it is recommended to place it in the footer.)
+                </div>
+            </div>'
+        %}
+
+        {% set siteInfoLegalWidget = 
+            '<div class="span5 ihs_site_info_edit_mode_info_container">
+                <span class="ihs_site_info_edit_mode_info_name">
+                    Legal widget: 
+                </span>
+                <span class="ihs_site_info_edit_mode_info" data="{{ei.siteSettings.legalWidget.active}}">
+                    {{ei.siteSettings.legalWidget.active}}
+                </span>
+
+                <span class="ihs_site_info_edit_mode_info_name" style="margin-left:5px">
+                    Terms: 
+                </span>
+                <span class="ihs_site_info_edit_mode_info" data="{{ei.siteSettings.legalWidget.terms.active}}">
+                    {{ei.siteSettings.legalWidget.terms.active}}
+                </span>
+
+                <span class="ihs_site_info_edit_mode_info_name" style="margin-left:5px">
+                    Privacy: 
+                </span>
+                <span class="ihs_site_info_edit_mode_info" data="{{ei.siteSettings.legalWidget.privacy.active}}">
+                    {{ei.siteSettings.legalWidget.privacy.active}}
+                </span>
+
+                <span class="ihs_site_info_edit_mode_info_name" style="margin-left:5px">
+                    Cookies: 
+                </span>
+                <span class="ihs_site_info_edit_mode_info" data="{{ei.siteSettings.legalWidget.cookies.active}}">
+                    {{ei.siteSettings.legalWidget.cookies.active}}
+                </span>
+
+                <span class="ihs_site_info_edit_mode_info_name" style="margin-left:5px">
+                    Cookies settings: 
+                </span>
+                <span class="ihs_site_info_edit_mode_info" data="{{ei.siteSettings.legalWidget.cookies.hsCookieSettings}}">
+                    {{ei.siteSettings.legalWidget.cookies.hsCookieSettings}}
+                </span>
+
+                <div class="ihs_site_info_edit_mode_info_details">
+                    (if true, a legal info widget is visible on each page. before using it, check if the widget is properly configured in the settings of this site. the legal widget is visible according to the configuration set in the settings of this site. it is recommended to place it in the footer. if the widget is set to false, its components are also false regardless of their configuration.)
+                </div>
+            </div>'
+        %}
+
+        {% set siteInfoCustomiseCookieSettings = 
+            '<div class="span5 ihs_site_info_edit_mode_info_container">
+                <span class="ihs_site_info_edit_mode_info_name">
+                    Customise Cookies Settings: 
+                </span>
+                <span class="ihs_site_info_edit_mode_info" data="{{ei.siteSettings.customiseHSCookieSettings}}">
+                    {{ei.siteSettings.customiseHSCookieSettings}}
+                </span>
+                <div class="ihs_site_info_edit_mode_info_details">
+                    (if true, this will customise the HubSpot Cookie Banner and the HubSpot Cookies Settings modal in order to make them to look and feel as the rest of the site. will also remove some borders from the elements of the HubSpot Cookies Settings modal and will make the modal to look much better on mobile)
+                </div>
+            </div>'
+        %}
+
+        {% set siteInfoShowSiteSettingsInEditor = 
+            '<div class="span5 ihs_site_info_edit_mode_info_container">
+                <span class="ihs_site_info_edit_mode_info_name">
+                    Show site settings in editor: 
+                </span>
+                <span class="ihs_site_info_edit_mode_info" data="{{ei.siteSettings.showSiteSettingsInEditor}}">
+                    {{ei.siteSettings.showSiteSettingsInEditor}}
+                </span>
+                <div class="ihs_site_info_edit_mode_info_details">
+                    (if true, this section is visible in editor. it cannot be turned off from the editor, for turning it off is necessary to modify site-settings.html in Design Manager.)
+                </div>
+            </div>'
+        %}
+
+        {% set siteInfoAuth0 = 
+            '<div class="span5 ihs_site_info_edit_mode_info_container">
+                <span class="ihs_site_info_edit_mode_info_name">
+                    Authentication with Auth0: 
+                </span>
+                <span class="ihs_site_info_edit_mode_info" data="{{ei.siteSettings.auth0.available}}">
+                    {{ei.siteSettings.auth0.available}}
+                </span>
+                <div class="ihs_site_info_edit_mode_info_details">
+                    (if true, this site can use Auth0 for authentication provided that Auth0 is proper configurated and REDUX store is available and own reducers are loaded. authentication is not available in edit mode due to the issues related to cross-domain authentication and redirects. these issues are raised because the page is loaded in an iframe inside the editor. note that configuring Auth0 can be made only in site-settings.html in Design Manager.)
+                </div>
+            </div>'
+        %}
+
+        {% set siteInfoReduxStoreAndOwnReducers = 
+            '<div class="span5 ihs_site_info_edit_mode_info_container">
+                <span class="ihs_site_info_edit_mode_info_name">
+                    Redux store and reducers: 
+                </span>
+                <span class="ihs_site_info_edit_mode_info" data="{{ei.siteSettings.enableAsyncReducers}}">
+                    {{ei.siteSettings.enableAsyncReducers}}
+                </span>
+                <div class="ihs_site_info_edit_mode_info_details">
+                    (own reducers are active. to check if everything is fine, open the Javascript console and load the home page. if everyting is fine, you should be able to see several console messages that will tell you that: 1. REDUX store is loaded; 2. this site is connected to the store; 3. the reducers of this site are injected to the store, so they can be used. note that Auth0 authentication cannot work without full REDUX support and also some other functionality will not be available)
+                </div>
+            </div>'
+        %}
+
+        {% set siteInfoHideCheckBox =
+            '<div class="ihs_site_info_edit_mode_hide_container span1">
+                <input type="checkbox" id="ihs_site_info_edit_mode_hide" name="ihs_site_info_edit_mode_hide" class = "ihs-external-react-app-toggle-visible-edit-mode">
+                <span id="ihs_site_info_edit_mode_hide_label" class="ihs-external-react-app-info-text" style="font-size: 14px !important">
+                    Show
+                </span>
+            </div>' 
+        %}
+
+        {% set siteInfoBox =
+            siteInfoHideCheckBox ~
+            siteInfoTitle ~
+            siteInfoShowSiteSettingsInEditor ~
+            siteInfoDynamicHeader ~
+            siteInfoGoToTopBtn ~
+            siteInfoStatusPageWidget ~
+            siteInfoLegalWidget ~
+            siteInfoReduxStoreAndOwnReducers ~
+            siteInfoAuth0 ~
+            emptySpace ~
+            siteInfoCustomiseCookieSettings
+        %}
+
+        {% set siteInfo = siteInfo|replace("**marker_to_be_replaced**", siteInfoBox) %}
+        {% set siteInfo = siteInfo|replace("\n","") %}
+        
+        {# site info area must be loaded in footer because the main element must be on page when loading site info #}
+        {% require_js position="footer" %}
+        <script>
+
+            let minSiteInfoEditModeContainerHeight = 300; 
+            $(window).on('load', () => {
+                $('main').prepend('{{siteInfo}}');
+                const selector = [
+                    '.ihs_site_info_edit_mode_message',
+                    '.ihs_site_info_edit_mode_title_row',
+                    '.ihs_site_info_edit_mode_title',
+                    '.ihs_site_info_edit_mode_info_name',
+                    '.ihs_site_info_edit_mode_info',
+                    '.ihs_site_info_edit_mode_info_details',
+                    '.ihs_site_info_edit_mode_separator',
+                    '.ihs_site_info_edit_mode_info_container',
+                    '.ihs_site_info_edit_mode_search_in_settings'
+                ];
+                $(selector.join(',')).hide();
+                $('.ihs_site_info_edit_mode').css('height', "auto");
+                $('.ihs_site_info_edit_mode').css('padding-top', "20px");
+                $('.ihs_site_info_edit_mode_hide_container').removeClass('span1');
+                $('#ihs_site_info_edit_mode_hide_label').text("Show site settings applicable to all pages (don't panic!!! this section is not visible in frontend)");
+                
+                $('.ihs_site_info_edit_mode').resizable({
+                    containment: "body", 
+                    autoHide: false, 
+                    handles: "s", 
+                    minHeight: 300, 
+
+                    stop: function(e, ui) {
+                        minSiteInfoEditModeContainerHeight = $('.ihs_site_info_edit_mode').height();
+                    }
+                });
+            });
+            
+        </script>
+        {% end_require_js %}
+
+        {% set spaceToAvoidCheckBox = '70px' %}
+
+        <style id = "ihs_site_info_edit_mode_style">
+
+            mark {
+                padding: 0;
+                background:yellow
+            }
+            
+            mark.current {
+                background: #5271ff;
+                color: #fff
+            }
+
+            .ihs_site_info_edit_mode_search_nav_btn {
+                width: fit-content !important;
+                margin-left: 10px !important;
+                cursor: pointer;
+                transform: translate(-20px, 10px);
+            }
+
+            .ihs_site_info_edit_mode_search_nav_btn svg:hover {
+                fill: #ff6200
+            }
+            .ihs_site_info_edit_mode {
+                margin-left:auto;
+                margin-right:auto;
+                margin-top:20px;
+                padding:20px;
+                padding-left: 0;
+                padding-top:0;
+                padding-right:0;
+                border: solid 2px #7fd1de;
+                border-radius: 5px;
+                background: #e5f5f8;
+                width:1200px;
+                height: 300px;
+                overflow-y:auto;
+            }
+
+            .ihs_site_info_edit_mode_title_row {
+                position: sticky;
+                top: 0;
+                background: #7fd1de;
+                width: auto;
+                margin-bottom: 10px;
+            }
+
+            .ihs_site_info_edit_mode_title {
+                font-weight: 900;
+                font-size:14px !important;
+                transform: translate(-30px,60%);
+            }
+
+            .ihs_site_info_edit_mode_message {
+                font-size:12px !important; 
+                font-weight:600; 
+                text-align:center
+            }
+
+            .ihs_site_info_edit_mode_info_name {
+                color:#000;
+                font-weight:900;
+                font-size:12px !important;
+            }
+
+            .ihs_site_info_edit_mode_info[data="true"] {
+                color:#fff;
+                font-weight:400;
+                font-size:12px !important;
+                background: green;
+                padding-left: 5px;
+                padding-right: 5px;
+                padding-top: 1px;
+                padding-bottom: 1px;
+                border-radius: 4px;
+            }
+
+            .ihs_site_info_edit_mode_info[data="false"] {
+                color:#fff;
+                font-weight:400;
+                font-size:12px !important;
+                background: #000;
+                padding-left: 5px;
+                padding-right: 5px;
+                padding-top: 1px;
+                padding-bottom: 1px;
+                border-radius: 4px;
+            }
+
+            .ihs_site_info_edit_mode_info {
+                color:#fff;
+                font-weight:400;
+                font-size:12px !important;
+                background: #ff6200;
+                padding-left: 5px;
+                padding-right: 5px;
+                padding-top: 1px;
+                padding-bottom: 1px;
+                border-radius: 4px;
+            }
+
+            .ihs_site_info_edit_mode_info_details {
+                font-weight: 400;
+                font-size:12px !important;
+                color:blueviolet;
+
+            }
+
+            .ihs_site_info_edit_mode_separator {
+                background:#7fd1de;
+                text-align:left;
+                width:90%
+            }
+
+            .ihs_site_info_edit_mode_hide_container {
+                position:sticky;
+                top:10px;
+                width: max-content;
+                margin-left: 20px !important;
+                z-index:3
+            }
+
+            #ihs_site_info_edit_mode_hide_label {
+                line-height:1em;
+                margin-right:5px;
+            }
+
+            .ihs_site_info_edit_mode_info_container {
+                border-bottom: solid 1px #7fd1de;
+                margin-bottom: 5px;
+                margin-left: {{spaceToAvoidCheckBox}} !important;
+            }
+
+            .ihs_site_info_edit_mode_info_container_empty {
+                margin-bottom: 5px;
+                margin-left: {{spaceToAvoidCheckBox}} !important;
+            }
+
+            #ihs_site_info_edit_mode_hide {
+                transform: scale(1.5);
+            }
+
+            .ihs_site_info_edit_mode_search_in_settings {
+                transform: scale(0.75);
+                width: auto !important;
+            }
+
+        </style>
+
+    {% endif %}
+
+{%  endmacro %}
+
+{# load legal widget #}
+{% macro legal_widget(ei) %}
+    
+    {% if ei.siteSettings.legalWidget.active %}
+        {% set hasTerms = ei.siteSettings.legalWidget.terms.active %}
+        {% set hasPrivacy = ei.siteSettings.legalWidget.privacy.active %}
+        {% set hasCookies = ei.siteSettings.legalWidget.cookies.active %}
+        {% set hasHSCookieSettings = ei.siteSettings.legalWidget.cookies.hsCookieSettings %}
+        
+        {% set whereTo = ei.siteSettings.legalWidget.whereTo %}
+
+        {% set termsText = '' %}
+        {% set termsLink = '' %}
+
+        {% set privacyText = '' %}
+        {% set privacyLink = '' %}
+
+        {% set cookiesText = '' %}
+        {% set cookiesLink = '' %}
+
+        
+        {% if hasTerms %}
+            {% set termsText = ei.siteSettings.legalWidget.terms.text %}
+            {% set termsLink = ei.siteSettings.legalWidget.terms.link %}
+        {% endif %}
+
+        {% if hasPrivacy %}
+            {% set privacyText = ei.siteSettings.legalWidget.privacy.text %}
+            {% set privacyLink = ei.siteSettings.legalWidget.privacy.link %}
+        {% endif %}
+
+        {% if hasCookies %}
+            {% set cookiesText = ei.siteSettings.legalWidget.cookies.text %}
+            {% set cookiesLink = ei.siteSettings.legalWidget.cookies.link %}
+        {% endif %}
+
+        {% set terms = '' %}
+        {% set privacy = '' %}
+        {% set cookies = '' %}
+        
+        {% set linkSeparator = '<span class = "ihs_legal_widget_link_separator"> | </span>' %}
+
+        {% if hasTerms %}
+            {% set terms = '<a class = "ihs_legal_widget_link" href = "{{termsLink}}" target="_blank">{{termsText}}</a>' ~ linkSeparator %}
+        {% endif %}
+
+        {% if hasPrivacy %}
+            {% set privacy = '<a class = "ihs_legal_widget_link" href = "{{privacyLink}}" target="_blank">{{privacyText}}</a>' ~ linkSeparator %}
+        {% endif %}
+
+        {% if hasCookies %}
+            {% set cookies = '<a class = "ihs_legal_widget_link" href = "{{cookiesLink}}" target="_blank">{{cookiesText}}</a>' %}
+        {% endif %}
+
+        {% set cookieSettingsBtn = '' %}
+        {% if hasHSCookieSettings %}
+            {% set cookieSettingsBtn =
+                '<div class = "ihs-legal-widget-cookie-settings-btn-container">
+                    <button type="button" id="hs_show_banner_button" class = "ihs-legal-widget-cookie-settings-btn">
+                        Cookie Settings
+                    </button>
+                </div>'
+            %}
+        {% endif %}
+
+        {% set legalLinks  = terms ~ privacy ~ cookies ~ cookieSettingsBtn %}
+        {% set legalLinks = legalLinks|replace("\n","") %}
+        
+        {% set legalWidget = 
+            '<div class="row-fluid-wrapper">
+                <div id = "ihs_legal_widget" class="ihs_legal_widget">
+                    {{legalLinks}}
+                </div
+            </div>' 
+        %}
+
+        {% set legalWidget = legalWidget|replace("\n","") %}
+
+        {% require_js position="footer" %}
+            <script id="ihs-legal-widget-script">
+                $(window).on('load', () => {
+                    $('{{whereTo}}').append('{{legalWidget}}');
+                    $('#hs_show_banner_button').click( () => {
+                        var _hsp = window._hsp = window._hsp || [];
+                        _hsp.push(["showBanner"]);
+
+                        IHSCSpecificHSSitePage.applyHSCookieSettingsStyles();
+                    });
+                });             
+            </script>
+        {% end_require_js %}
+
+        {% set linkColor = ei.siteSettings.legalWidget.linkColor %}
+        {% set linkHoverColor = ei.siteSettings.legalWidget.linkHoverColor %}
+        {% set separatorColor = ei.siteSettings.legalWidget.separatorColor %}
+        {% set fontSize = ei.siteSettings.legalWidget.fontSize %}
+
+        
+        {% set cookieSettingsBtnBackgroundColor = '' %}
+        {% set cookieSettingsBtnFontColor = '' %}
+        {% set cookieSettingsBtnFontSize = ''%}
+        {% if hasHSCookieSettings %}
+            {% set cookieSettingsBtnBackgroundColor = ei.siteSettings.legalWidget.cookieSettingsBtnBackgroundColor %}
+            {% set cookieSettingsBtnFontColor = ei.siteSettings.legalWidget.cookieSettingsBtnFontColor %}
+            {% set cookieSettingsBtnFontSize = ei.siteSettings.legalWidget.cookieSettingsBtnFontSize %}
+        {% endif %}
+
+        {% if hasHSCookieSettings %}
+            <style id = "ihs_legal_widget_cookie_settings_style">
+
+                .ihs-legal-widget-cookie-settings-btn-container {
+                    margin-top:10px;
+                }
+
+                .ihs-legal-widget-cookie-settings-btn {
+                    background-color: {{cookieSettingsBtnBackgroundColor}}; 
+                    border: 0;
+                    border-radius: 3px; 
+                    padding: 8px 12px; 
+                    text-decoration: none; 
+                    color: {{cookieSettingsBtnFontColor}};
+                    font-family: inherit; 
+                    font-size: {{cookieSettingsBtnFontSize}}; 
+                    font-weight: normal; 
+                    text-align: left; 
+                    text-shadow: none;
+                }
+            </style>
+        {% endif %}
+
+        <style id = "ihs_legal_widget_style">
+            
+            .ihs_legal_widget_link {
+                color: {{linkColor}} !important;
+                font-size:{{fontSize}};
+            }
+
+            .ihs_legal_widget_link:hover {
+                color: {{linkHoverColor}};
+            }
+
+            .ihs_legal_widget_link_separator {
+                color: {{separatorColor}};
+            }
+
+            .ihs_legal_widget {
+                padding-top:10px;
+                padding-bottom:10px;
+            }
+
+        </style>
+        
+    {% endif %}
+{% endmacro %}

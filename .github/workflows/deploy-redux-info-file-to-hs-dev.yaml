@@ -1,0 +1,78 @@
+name: Deploy IHS Hubspot DEV
+
+on:
+  workflow_run:
+    workflows: [Create REDUX Info Files on DEV]
+    types:
+      - completed
+jobs:
+  deploy-hs-redux-info:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete old Redux Info files
+        env:
+          HUBSPOT_PORTAL_ID: ${{ secrets.IHS_HUBSPOT_DEV_PORTAL_ID }}
+          HUBSPOT_PERSONAL_ACCESS_KEY: ${{ secrets.IHS_HUBSPOT_DEV_PERSONAL_ACCESS_KEY }}
+        run: |
+          npx --yes --package=@hubspot/cli@latest --call='hs remove ihs-redux/ihs-redux-info --use-env'
+        shell: bash
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Deploy Redux Info files
+        uses: HubSpot/hubspot-cms-deploy-action@v1.5
+        with:
+          src_dir: ihs-redux/ihs-redux-info
+          dest_dir: ihs-redux/ihs-redux-info
+          portal_id: ${{ secrets.IHS_HUBSPOT_DEV_PORTAL_ID }}
+          personal_access_key: ${{ secrets.IHS_HUBSPOT_DEV_PERSONAL_ACCESS_KEY }}
+
+      - name: Delete old ACTIONS
+        env:
+          HUBSPOT_PORTAL_ID: ${{ secrets.IHS_HUBSPOT_DEV_PORTAL_ID }}
+          HUBSPOT_PERSONAL_ACCESS_KEY: ${{ secrets.IHS_HUBSPOT_DEV_PERSONAL_ACCESS_KEY }}
+        run: |
+          npx --yes --package=@hubspot/cli@latest --call='hs remove ihs-redux/actions --use-env'
+        shell: bash
+      
+      - name: Deploy updated ACTIONS
+        uses: HubSpot/hubspot-cms-deploy-action@v1.5
+        with:
+          src_dir: ihs-redux/actions
+          dest_dir: ihs-redux/actions
+          portal_id: ${{ secrets.IHS_HUBSPOT_DEV_PORTAL_ID }}
+          personal_access_key: ${{ secrets.IHS_HUBSPOT_DEV_PERSONAL_ACCESS_KEY }}
+        
+      - name: Delete old REDUCERS
+        env:
+          HUBSPOT_PORTAL_ID: ${{ secrets.IHS_HUBSPOT_DEV_PORTAL_ID }}
+          HUBSPOT_PERSONAL_ACCESS_KEY: ${{ secrets.IHS_HUBSPOT_DEV_PERSONAL_ACCESS_KEY }}
+        run: |
+          npx --yes --package=@hubspot/cli@latest --call='hs remove ihs-redux/reducers --use-env'
+        shell: bash
+      
+      - name: Deploy updated REDUCERS
+        uses: HubSpot/hubspot-cms-deploy-action@v1.5
+        with:
+          src_dir: ihs-redux/reducers
+          dest_dir: ihs-redux/reducers
+          portal_id: ${{ secrets.IHS_HUBSPOT_DEV_PORTAL_ID }}
+          personal_access_key: ${{ secrets.IHS_HUBSPOT_DEV_PERSONAL_ACCESS_KEY }}
+
+      - name: Delete old TYPES
+        env:
+          HUBSPOT_PORTAL_ID: ${{ secrets.IHS_HUBSPOT_DEV_PORTAL_ID }}
+          HUBSPOT_PERSONAL_ACCESS_KEY: ${{ secrets.IHS_HUBSPOT_DEV_PERSONAL_ACCESS_KEY }}
+        run: |
+          npx --yes --package=@hubspot/cli@latest --call='hs remove ihs-redux/types --use-env'
+        shell: bash
+      
+      - name: Deploy updated TYPES
+        uses: HubSpot/hubspot-cms-deploy-action@v1.5
+        with:
+          src_dir: ihs-redux/types
+          dest_dir: ihs-redux/types
+          portal_id: ${{ secrets.IHS_HUBSPOT_DEV_PORTAL_ID }}
+          personal_access_key: ${{ secrets.IHS_HUBSPOT_DEV_PERSONAL_ACCESS_KEY }}
+    

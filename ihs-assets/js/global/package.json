@@ -1,0 +1,24 @@
+{
+  "name": "global-ihs-init-for-web-apps",
+  "version": "1.10.1",
+  "description": "Contain the JS scripts that must be loaded for using the common IHS REDUX Store",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pmc-community/resources.git"
+  },
+  "keywords": [
+    "redux",
+    "redux-ready",
+    "innohub.space",
+    "pmc"
+  ],
+  "author": "PMC",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/pmc-community/resources/issues"
+  },
+  "homepage": "https://innohub.space/"
+}

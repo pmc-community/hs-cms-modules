@@ -1,0 +1,3 @@
+#!/bin/bash
+#hs remove ihs-macros
+hs upload ihs-macros ihs-macros

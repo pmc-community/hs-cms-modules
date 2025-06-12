@@ -1,0 +1,1269 @@
+<!-- module html  -->
+
+{# DEFINE SOME MODULE GLOBALS #}
+
+{% set currentList = [] %}
+{% set appList  = [] %}
+{% set fullAppList = [] %}
+{% set moduleInfo = {} %}
+
+{# prevent weird values in module.app_div_styles.app_div_position.app_div_position_type #}
+{% set appPosition = module.app_div_styles.app_div_position.app_div_position_type %}
+{% if appPosition != 'div--position--default' && appPosition != 'div--position--fixed' %}
+    {% set appPosition ='div--position--default' %}
+{% endif %}
+
+{# set the div for styling. if position is not default, the div for styling will be the container, otherwise will be the app div #}
+{% set divForStyling = '' %}
+{% if appPosition == 'div--position--fixed' %}
+    {% set divForStyling = module.external_react_app_root_div ~ '_ihs_era_container' %}
+{% else %}
+    {% set divForStyling = module.external_react_app_root_div %}
+{% endif %}
+
+{# set the app container header #}
+{% set divHeaderContainer = module.external_react_app_root_div ~ '_ihs_era_container_header' %}
+
+{# set the app title for the div header in FULL HEIGHT #}
+{% set appTitle = module.external_react_app_title %}
+{% set appTitleId = module.external_react_app_root_div ~ '_ihs_era_container_header_title' %}
+
+{# set the header buttons #}
+{% set appCloseBtn = module.external_react_app_root_div ~ '_ihs_era_close_btn' %}
+{% set appMaximiseBtn = module.external_react_app_root_div ~ '_ihs_era_maximise_btn' %}
+{% set appRestoreDefautsBtn = module.external_react_app_root_div ~ '_ihs_era_set_defaults_btn' %}
+{% set appRestoreLastSavedBtn = module.external_react_app_root_div ~ '_ihs_era_set_last_saved_btn' %}
+
+{# editMode global shall be array, if boolean it seems that will be not initialised properly #}
+{% set editMode = [] %}
+
+{% set appPositionSize = module.app_div_styles.app_div_position.app_div_position_size %}
+
+{# get the appType to see if is a full react app or only a react app component#}
+{% set appType = module.ihs_era_app_type %}
+
+{% require_js position="footer" %}
+    <script>
+        if (typeof consolePrint === 'undefined') consolePrint = function (...args) { queueMicrotask(console.log.bind(console, ...args)); }
+    </script>
+{% end_require_js %}
+
+{# END DEFINE MODULE GLOBALS #}
+{# ------------------------------- #}
+
+{# MODULE MACROS #}
+{% macro get_edit_mode(crtUrl) %}
+    {% if crtUrl is string_containing "/content-rendering/" %}    
+        {% do editMode.append(true) %}
+    {% else %}
+        {% do editMode.append(false) %}
+    {% endif %}
+{% endmacro %}
+
+{% macro get_app_lists() %}
+    {% import "/ihs-res/ihs-res-info/res.html" as ihsResources %}
+    {% for key, val in ihsResources.ihsRes.items() %}
+        {# use "do ..." otherwise append renders a visible "true" in edit mode for each key #}            
+        {% do currentList.append(['"' ~ key ~ '"', '"' ~ key ~ '"']) %}
+        {% if key not in fullAppList %}
+            {% do fullAppList.append(key) %}
+        {% endif %}
+        {% if key != module.external_react_app_name && key not in appList %}
+            {% do appList.append(key) %}
+        {% endif %}       
+    {% endfor %}        
+{% endmacro %}
+
+{% macro throw_console_info() %}
+    {% require_js position="footer" %}
+        <script>
+            consolePrint('%c{{ local_dt|datetimeformat("%a %d-%b-%Y %H:%M:%S:%f") }}: EXTERNAL REACT APP INFO', "font-weight:700; color:#000000");
+            consolePrint(' HubSpot CMS module: External React Application');
+        
+            {% if module.external_react_app_name != "App-Name"%}
+                consolePrint(' App name: {{module.external_react_app_name}}');
+            {% else %}
+                consolePrint(' App name: no app loaded in module');
+            {% endif %}
+
+            {% if module.external_react_app_root_div != "App-Root-Div" %}
+                consolePrint(' Root div: {{module.external_react_app_root_div}}');
+            {% else %}
+                consolePrint(' Root div: app root div not valid');
+            {% endif %}
+        
+            consolePrint(" Other available apps: {{appList|join(', ')}}");
+            consolePrint('%c{{ local_dt|datetimeformat("%a %d-%b-%Y %H:%M:%S:%f") }}: END EXTERNAL REACT APP INFO\n', "font-weight:700; color:#000000");
+        </script>
+    {% end_require_js  %}
+{% endmacro%}
+
+{% macro show_external_react_app_info() %}
+    <div class = "ihs-external-react-app-info">
+        <p style="font-size:14px; font-weight:600; text-align:center">-- SHOWN IN EDIT AND PREVIEW MODES ONLY --</p>
+        <p class = "ihs-external-react-app-info-text ihs-external-react-app-info-label">Loaded React App:
+        
+        {% if module.external_react_app_name != "App-Name"%} 
+            <span class = "ihs-external-react-app-info-text ihs-external-react-app-info-content">{{module.external_react_app_name}}</span>
+        {% else %}
+            <span class = "ihs-external-react-app-info-text ihs-external-react-app-info-content">no app loaded in module</span>
+        {% endif %}
+
+        </p>
+
+        <p class = "ihs-external-react-app-info-text ihs-external-react-app-info-label">Loaded component(div):
+        
+        {% if module.external_react_app_root_div != "App-Root-Div"%} 
+            <span class = "ihs-external-react-app-info-text ihs-external-react-app-info-content">{{module.external_react_app_root_div}}</span>
+        {% else %}
+            <span class = "ihs-external-react-app-info-text ihs-external-react-app-info-content">no app component loaded in module</span>
+        {% endif %}
+
+        </p>
+
+        <p class = "ihs-external-react-app-info-text ihs-external-react-app-info-label">Other Available Apps: 
+            <span class = "ihs-external-react-app-info-text ihs-external-react-app-info-content">{{appList|join(', ')}}</span>
+        </p>
+    
+        <p class = "ihs-external-react-app-info-text ihs-external-react-app-info-message"> Edit the module to change the React App</p>
+
+        <input type="checkbox" id="ihs-era-toggle-app-visible-edit-mode_{{ name }}" name="ihs-era-toggle-app-visible-edit-mode_{{ name }}" class = "ihs-external-react-app-toggle-visible-edit-mode" ><span id="ihs-era-toggle-app-visible-edit-mode-label_{{ name }}" class="ihs-external-react-app-info-text">Hide App</span>
+
+        <p id="ihs-era-toggle-app-visible-edit-mode-helper_{{ name }}" class = "ihs-external-react-app-info-text"> (useful when app position is fixed and the app may cover other elements)</p>
+    </div>
+{% endmacro %}
+
+{% macro no_react_app_info() %}
+    <div class = "ihs-external-react-app-info">
+        <p class = "ihs-external-react-app-info-text ihs-external-react-app-info-message"> There is no external React App configured for this module!<br>Check the app name: SHOULD BE ONE OF THE AVAILABLE APPS<br>Check the app root div: SHOULD BE AS INDICATED IN APP DOCUMENTATION<br>Edit the module to configure the React App with one of the Apps shown below</p>
+
+        <p class = "ihs-external-react-app-info-text ihs-external-react-app-info-label">Available Apps: 
+            <span class = "ihs-external-react-app-info-text ihs-external-react-app-info-content">{{fullAppList|join(', ')}}</span>
+        </p>
+    </div>
+{% endmacro %}
+
+{% macro no_react_app_info_frontend() %}
+    <div class = "ihs-external-react-app-info">
+        <p class = "ihs-external-react-app-info-text ihs-external-react-app-info-text-frontend"> <span style="color:#000; font-weight:700">Aww!!!</span> I feel that something should be here but is not!</p>
+        <p class = "ihs-external-react-app-info-text ihs-external-react-app-info-text-frontend">Seems that the content is not loaded, or something went wrong.</p>
+        <p class = "ihs-external-react-app-info-text ihs-external-react-app-info-text-frontend"> Maybe you should contact the site admin.</p>
+    </div>
+{% endmacro %}
+
+{% macro external_react_app_info() %}
+    {{ show_external_react_app_info() }}
+        
+    {% if module.external_react_app_helpers.throw_console_info %} 
+        {{ throw_console_info() }}
+    {% endif %}
+{% endmacro %} 
+
+{% macro edit_mode_only()  %}
+    {% if editMode[0] %}
+        {{ external_react_app_info() }}
+        
+        {% require_js position="footer" %}
+            <script>
+                $(window).on('load', function() {
+                    ihs_era_do_stuff_on_client_side_edit_only('{{ moduleInfo|tojson }}');
+                });
+            </script>
+        {% end_require_js %}
+
+    {% endif %}
+{% endmacro %}
+
+{% macro frontend_mode_only()  %}
+    {% if !editMode[0] %}
+        {% require_js position="footer" %}
+            <script>
+                $(window).on('load', function() {
+                    ihs_era_do_stuff_on_client_side_frontend('{{ moduleInfo|tojson }}');
+                });
+            </script>
+        {% end_require_js %}
+    {% endif %}
+{% endmacro %}
+
+{% macro get_module_settings() %}
+    {% do moduleInfo.update({"appPage": content.name|striptags}) %}
+    {% do moduleInfo.update({"instanceId": name}) %}
+    
+    {% if module.external_react_app_name != 'App-Name'%}
+        {% do moduleInfo.update({"appName": module.external_react_app_name}) %}
+    {% else %}
+        {% do moduleInfo.update({"appName": "no_app"}) %}
+    {% endif %}
+
+    {% if module.external_react_app_name != 'App-Name' && module.external_react_app_root_div != 'App-Root-Div' %}
+        {% do moduleInfo.update({"appRootDiv": module.external_react_app_root_div}) %}
+    {% else %}
+        {% do moduleInfo.update({"appRootDiv": "no_root_div"}) %}
+    {% endif %}
+    
+    {% do moduleInfo.update({"fullAppList": fullAppList}) %}
+    {% do moduleInfo.update({"throwToConsole": module.external_react_app_helpers.throw_console_info}) %}
+    {% do moduleInfo.update({"editMode": editMode[0]}) %}
+    
+    {% do moduleInfo.update({"appPosition": appPosition}) %}
+    {% set posUnit = module.app_div_styles.app_div_position.app_div_position_unit %}
+    {% set posTop = module.app_div_styles.app_div_position.app_div_position_offset_top %}
+    {% set posLeft = module.app_div_styles.app_div_position.app_div_position_offset_left %}
+    {% if posUnit == 'percentage' %}
+        {% set posUnit = '%' %}
+    {% endif %}
+    {% do moduleInfo.update(
+        {
+            "appPositionXY":
+            {
+                "default": 
+                {
+                    "top":posTop, 
+                    "left":posLeft, 
+                    "unit": posUnit
+                },
+                "lastSaved": 
+                {
+                    "top":posTop, 
+                    "left":posLeft, 
+                    "unit": posUnit
+                }
+            }
+        }) 
+    %}
+
+    {% set sizeType = module.app_div_styles.app_div_position.app_div_position_size %}
+    {% set w = 0 %}
+    {% set wu = 'px' %}
+    
+    {% set h = 0 %}
+    {% set hu = 'px' %}
+
+    {% set fromLeft = module.app_div_styles.app_div_position.app_div_position_enter_from_left %}
+    {% set fromTop = module.app_div_styles.app_div_position.app_div_position_enter_from_top %}
+
+    {% do moduleInfo.update(
+        {
+            "appSize":
+            {
+                "type": sizeType,
+                "default":
+                {
+                    "width":
+                    {
+                        "value": w,
+                        "unit": wu
+                    },
+                    "height":
+                    {
+                        "value": h,
+                        "unit": hu
+                    }
+                },
+                "lastSaved":
+                {
+                    "width":
+                    {
+                        "value": w,
+                        "unit": wu
+                    },
+                    "height":
+                    {
+                        "value": h,
+                        "unit": hu
+                    }
+                }
+
+            },
+            "appEntrance":
+            {
+                "fromLeft": fromLeft,
+                "fromTop": fromTop
+            }
+        })
+    %}
+    
+    {% set textTriggers = module.app_triggers.app_text_trigger %}
+    {% set cssTriggers = module.app_triggers.app_dom_element_trigger %}
+    {% do moduleInfo.update(
+        {
+            "appTriggers":
+                {
+                    "textTriggers": textTriggers,
+                    "cssTriggers": cssTriggers
+                }
+        })
+    %}
+
+    {% do moduleInfo.update({"appTitle": appTitle}) %}
+    {% do moduleInfo.update({"appType": appType}) %}
+    {% do moduleInfo.update({"appOpenStatus": false}) %}
+
+    {% do moduleInfo.update(
+        {
+            "appStyle":
+            {
+                "border":
+                {
+                    "style": module.app_div_styles.app_div_styles_border.app_border.top.style ~ ' ' ~ module.app_div_styles.app_div_styles_border.app_border.top.width.value ~ module.app_div_styles.app_div_styles_border.app_border.top.width.units  ~ ' ' ~ module.app_div_styles.app_div_styles_border.app_border.top.color,
+                    "radius": module.app_div_styles.app_div_styles_border.app_border_radius ~ 'px'
+                }                     
+            }
+        }) 
+    
+    %}
+
+{% endmacro %}
+{# END MODULE MACROS #}
+{# ------------------------------- #}
+
+{# LOADING THE MODULE #}
+
+{# INIT GLOBALS #}
+{{ get_edit_mode(request.full_url) }}
+{{ get_app_lists() }}
+{{ get_module_settings() }}
+{# END INIT GLOBALS #}
+{# ------------------------------- #}
+
+{# EDIT MODE ONLY #}
+{{ edit_mode_only() }}
+{# END OF EDIT MODE #}
+{# ------------------------------- #}
+
+{# FRONTEND MODE ONLY #}
+{{ frontend_mode_only() }}
+{# END OF FRONTEND MODE #}
+{# ------------------------------- #}
+
+{# loading app (also in edit mode just to be sure that is working) #}
+{% if fullAppList is containing module.external_react_app_name %}
+    {% import "ihs-macros/load-react-apps.html" as load_react_apps %}
+    {% if editMode[0]  %}
+        {{ load_react_apps.load_react_app_from_json_async(module.external_react_app_name, module.external_react_app_root_div, appPosition, appTitle, appPositionSize, appType) }}
+    {% else %}
+        {% if module.show_in_frontend %}
+            {{ load_react_apps.load_react_app_from_json_async(module.external_react_app_name, module.external_react_app_root_div, appPosition, appTitle, appPositionSize, appType) }}
+        {% endif %}
+    {% endif %}
+{% else %}
+    {% if editMode[0] %}
+        {{ no_react_app_info() }}
+    {% else %}
+        {% if module.external_react_app_helpers.throw_frontend_errors %}
+            {{ no_react_app_info_frontend() }}
+        {% endif %}
+    {% endif %}
+{% endif %}
+
+{# END LOADING THE MODULE #}
+{# ------------------------------- #}
+
+{# APPLY MODULE STYLES #}
+
+{# module styles macros #}
+{% macro set_general_styles() %}
+    {% require_css %}
+        <style id = "ihs-era-style_{{ name }}_general_styles">
+            {% scope_css %}
+                #{{divForStyling}} {
+    
+                    padding-top: {{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.top.value }}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.top.units }};
+                    padding-bottom: {{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.bottom.value }}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.bottom.units }};
+                    padding-left: {{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.left.value }}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.left.units }};
+                    padding-right: {{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.right.value }}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.right.units }};
+    
+                    margin-top: {{ module.app_div_styles.app_div_styles_spacing.app_spacing.margin.top.value}}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.margin.top.units}};
+                    margin-bottom: {{ module.app_div_styles.app_div_styles_spacing.app_spacing.margin.bottom.value}}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.margin.bottom.units}};
+    
+                    border: {{ module.app_div_styles.app_div_styles_border.app_border.top.style}} {{ module.app_div_styles.app_div_styles_border.app_border.top.width.value}}{{ module.app_div_styles.app_div_styles_border.app_border.top.width.units}} {{ module.app_div_styles.app_div_styles_border.app_border.top.color}};
+                    border-radius: {{ module.app_div_styles.app_div_styles_border.app_border_radius}}px;
+    
+                    box-shadow: {{ module.app_div_styles.app_div_shadow.app_div_shadow_x}}px {{ module.app_div_styles.app_div_shadow.app_div_shadow_y}}px {{ module.app_div_styles.app_div_shadow.app_div_shadow_width}}px {{ module.app_div_styles.app_div_shadow.app_div_shadow_color.color}};
+    
+                    background: {{module.app_div_styles.app_div_colors.app_div_background_color.color}}
+                }
+            {% end_scope_css %} 
+        </style>
+    {% end_require_css %}
+{% endmacro %}
+
+{% macro set_fixed_position_styles() %}
+    {% set posTop = module.app_div_styles.app_div_position.app_div_position_offset_top %}
+    {% set posLeft = module.app_div_styles.app_div_position.app_div_position_offset_left %}
+    {% set posUnit = module.app_div_styles.app_div_position.app_div_position_unit %}
+    {% if posUnit == 'percentage' %}
+        {% set posUnit = '%' %}
+    {% endif %}
+
+    {# styles for fixed custom position #}
+    {% if module.app_div_styles.app_div_position.app_div_position_size != 'div--position--size--full--width'  && module.app_div_styles.app_div_position.app_div_position_size != 'div--position--size--full--height' && module.app_div_styles.app_div_position.app_div_position_size != 'div--position--size--full--screen'%}
+        {% require_css %}
+            <style id = "ihs-era-style_{{name}}_fixed_position_styles_{{module.external_react_app_root_div}}">
+                {% scope_css %}
+                    #{{divForStyling}} {              
+                        display:none;
+                        position: fixed;
+                        top: {{ posTop }}{{ posUnit }};
+                        left: {{ posLeft }}{{ posUnit }};
+                    }
+
+                    #{{module.external_react_app_root_div}} {
+                        margin-top: calc(115px + {{ ' ' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.margin.top.value}}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.margin.top.units}} - {{ ' ' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.top.value }}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.top.units }});
+                    }
+
+                    #{{divHeaderContainer}} { 
+                        height: 80px;
+                        background: #eaeaea;
+                        position: absolute;
+                
+                        margin-top: calc({{ '-' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.margin.top.value}}{{module.app_div_styles.app_div_styles_spacing.app_spacing.margin.top.units }} + {{ '-' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.top.value}}{{module.app_div_styles.app_div_styles_spacing.app_spacing.padding.top.units }});
+
+                        margin-left: {{ '-' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.left.value}}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.left.units }};
+
+                        padding-top:20px;
+
+                        padding-left: calc({{' (' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.left.value}}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.left.units ~ ')'}} + 20px);
+
+                        background: {{module.app_div_styles.app_div_colors.app_div_header_background_color.color}}
+                    }
+
+                    #{{appTitleId}} {
+                        color: {{module.app_div_styles.app_div_colors.app_div_header_title_color.color}}
+                    }
+
+                    #{{appCloseBtn}} {
+                        fill: {{module.app_div_styles.app_div_colors.app_div_close_btn_color.color}}
+                    }
+
+                    #{{appCloseBtn}}:hover {
+                        fill: {{module.app_div_styles.app_div_colors.app_div_close_btn_hover_color.color}};
+                    }
+
+                    #{{appMaximiseBtn}} {
+                        fill: {{module.app_div_styles.app_div_colors.app_div_maximise_btn_color.color}}
+                    }
+
+                    #{{appMaximiseBtn}}:hover {
+                        fill: {{module.app_div_styles.app_div_colors.app_div_maximise_btn_hover_color.color}};
+                    }
+
+                    #{{appRestoreDefautsBtn}} {
+                        fill: {{module.app_div_styles.app_div_colors.app_div_restore_defaults_btn_color.color}}
+                    }
+
+                    #{{appRestoreDefautsBtn}}:hover {
+                        fill: {{module.app_div_styles.app_div_colors.app_div_restore_defaults_btn_hover_color.color}};
+                    }
+
+                    #{{appRestoreLastSavedBtn}} {
+                        fill: {{module.app_div_styles.app_div_colors.app_div_restore_last_saved_btn_color.color}}
+                    }
+
+                    #{{appRestoreLastSavedBtn}}:hover {
+                        fill: {{module.app_div_styles.app_div_colors.app_div_restore_last_saved_btn_color.color}};
+                    }
+
+                {% end_scope_css %} 
+            </style>
+        {% end_require_css %}
+    {% endif %}
+
+    {# styles for fixed full width position #}
+    {% if module.app_div_styles.app_div_position.app_div_position_size == 'div--position--size--full--width' %}
+        {# enter from top #}
+        {% if module.app_div_styles.app_div_position.app_div_position_enter_from_top %}
+            {% require_css %}
+                <style id = "ihs-era-style_{{name}}_fixed_position_styles_{{module.external_react_app_root_div}}">
+                    {% scope_css %}
+                        #{{divForStyling}} {              
+                            display:none;
+                            position: fixed;
+                            top: 0;
+                            left: 0;
+                            width: 100%;
+                            border-radius:0;
+                            border:none;
+                            border-bottom: solid 1px #eaeaea;
+                            box-shadow:none;
+                        }
+
+                        #{{module.external_react_app_root_div}} {
+                            padding-top:calc({{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.top.value}}{{module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.top.units ~ ' ' }} + {{ ' ' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.top.value }}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.top.units }});
+                            padding-left:calc({{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.left.value}}{{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.left.units ~ ' ' }} + {{  ' ' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.left.value }}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.left.units }});
+                            padding-bottom: calc({{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.bottom.value }}{{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.bottom.units ~ ' ' }} + {{ ' ' ~  module.app_div_styles.app_div_styles_spacing.app_spacing.padding.bottom.value }}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.bottom.units }});
+                            padding-right:calc({{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.right.value}}{{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.right.units ~ ' ' }}+ {{ ' ' ~  module.app_div_styles.app_div_styles_spacing.app_spacing.padding.right.value }}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.right.units }});
+
+                            margin-top: calc({{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.margin.top.value}}{{module.app_div_styles.app_div_styles_spacing.app_extra_spacing.margin.top.units ~ ' ' }} + {{' ' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.margin.top.value}}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.margin.top.units}});
+                            margin-bottom: calc({{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.margin.bottom.value}}{{module.app_div_styles.app_div_styles_spacing.app_extra_spacing.margin.bottom.units ~ ' ' }} + {{' ' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.margin.bottom.value}}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.margin.bottom.units}});
+                        }
+
+                        #{{divHeaderContainer}} { 
+                            height: 80px;
+                            background: #eaeaea;
+                            position: absolute;
+                        
+                            margin-top: calc({{ '-' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.margin.top.value}}{{module.app_div_styles.app_div_styles_spacing.app_spacing.margin.top.units }} + {{ '-' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.top.value}}{{module.app_div_styles.app_div_styles_spacing.app_spacing.padding.top.units }});
+
+                            margin-left: {{ '-' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.left.value}}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.left.units }};
+
+                            padding-top: 20px;
+
+                            padding-left: calc({{' (' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.left.value}}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.left.units ~ ')'}} + 20px);
+
+                            background: {{module.app_div_styles.app_div_colors.app_div_header_background_color.color}}
+                        }
+
+                        #{{appTitleId}} {
+                            color: {{module.app_div_styles.app_div_colors.app_div_header_title_color.color}};
+                            width: 80%;
+                        }
+
+                        #{{appCloseBtn}} {
+                            fill: {{module.app_div_styles.app_div_colors.app_div_close_btn_color.color}}
+                        }
+
+                        #{{appCloseBtn}}:hover {
+                            fill: {{module.app_div_styles.app_div_colors.app_div_close_btn_hover_color.color}};
+                        }
+
+                        #{{appMaximiseBtn}} {
+                            fill: {{module.app_div_styles.app_div_colors.app_div_maximise_btn_color.color}}
+                        }
+
+                        #{{appMaximiseBtn}}:hover {
+                            fill: {{module.app_div_styles.app_div_colors.app_div_maximise_btn_hover_color.color}};
+                        }
+
+                        #{{appRestoreDefautsBtn}} {
+                            fill: {{module.app_div_styles.app_div_colors.app_div_restore_defaults_btn_color.color}}
+                        }
+
+                        #{{appRestoreDefautsBtn}}:hover {
+                            fill: {{module.app_div_styles.app_div_colors.app_div_restore_defaults_btn_hover_color.color}};
+                        }
+
+                        #{{appRestoreLastSavedBtn}} {
+                            fill: {{module.app_div_styles.app_div_colors.app_div_restore_last_saved_btn_color.color}}
+                        }
+
+                        #{{appRestoreLastSavedBtn}}:hover {
+                            fill: {{module.app_div_styles.app_div_colors.app_div_restore_last_saved_btn_color.color}};
+                        }
+
+                    {% end_scope_css %} 
+                </style>
+            {% end_require_css %}
+        {# enter from bottom #}
+        {% else %}
+            {% require_css %}
+                <style id = "ihs-era-style_{{name}}_fixed_position_styles_{{module.external_react_app_root_div}}">
+                    {% scope_css %}
+                        #{{divForStyling}} {              
+                            display:none;
+                            position: fixed;
+                            bottom: 0;
+                            left: 0;
+                            width: 100%;
+                            border-radius:0;
+                            border:none;
+                            border-top: solid 1px #eaeaea;
+                            box-shadow:none;
+                        }
+
+                        #{{module.external_react_app_root_div}} {
+                            padding-top:calc({{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.top.value}}{{module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.top.units ~ ' ' }} + {{ ' ' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.top.value }}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.top.units }});
+                            padding-left:calc({{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.left.value}}{{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.left.units ~ ' ' }} + {{  ' ' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.left.value }}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.left.units }});
+                            padding-bottom: calc({{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.bottom.value }}{{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.bottom.units ~ ' ' }} + {{ ' ' ~  module.app_div_styles.app_div_styles_spacing.app_spacing.padding.bottom.value }}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.bottom.units }});
+                            padding-right:calc({{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.right.value}}{{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.right.units ~ ' ' }}+ {{ ' ' ~  module.app_div_styles.app_div_styles_spacing.app_spacing.padding.right.value }}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.right.units }});
+
+                            margin-top: calc({{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.margin.top.value}}{{module.app_div_styles.app_div_styles_spacing.app_extra_spacing.margin.top.units ~ ' ' }} + {{' ' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.margin.top.value}}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.margin.top.units}});
+                            margin-bottom: calc({{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.margin.bottom.value}}{{module.app_div_styles.app_div_styles_spacing.app_extra_spacing.margin.bottom.units ~ ' ' }} + {{' ' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.margin.bottom.value}}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.margin.bottom.units}});
+                        }
+
+                        #{{divHeaderContainer}} { 
+                            height: 80px;
+                            background: #eaeaea;
+                            position: absolute;
+                        
+                            margin-top: calc({{ '-' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.margin.top.value}}{{module.app_div_styles.app_div_styles_spacing.app_spacing.margin.top.units }} + {{ '-' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.top.value}}{{module.app_div_styles.app_div_styles_spacing.app_spacing.padding.top.units }});
+
+                            margin-left: {{ '-' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.left.value}}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.left.units }};
+
+                            padding-top: 20px;
+
+                            padding-left: calc({{' (' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.left.value}}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.left.units ~ ')'}} + 20px);
+
+                            background: {{module.app_div_styles.app_div_colors.app_div_header_background_color.color}}
+                        }
+
+                        #{{appTitleId}} {
+                            color: {{module.app_div_styles.app_div_colors.app_div_header_title_color.color}};
+                            width: 80%;
+                        }
+
+                        #{{appCloseBtn}} {
+                            fill: {{module.app_div_styles.app_div_colors.app_div_close_btn_color.color}}
+                        }
+
+                        #{{appCloseBtn}}:hover {
+                            fill: {{module.app_div_styles.app_div_colors.app_div_close_btn_hover_color.color}};
+                        }
+
+                        #{{appMaximiseBtn}} {
+                        fill: {{module.app_div_styles.app_div_colors.app_div_maximise_btn_color.color}}
+                        }
+
+                        #{{appMaximiseBtn}}:hover {
+                            fill: {{module.app_div_styles.app_div_colors.app_div_maximise_btn_hover_color.color}};
+                        }
+
+                        #{{appRestoreDefautsBtn}} {
+                            fill: {{module.app_div_styles.app_div_colors.app_div_restore_defaults_btn_color.color}}
+                        }
+
+                        #{{appRestoreDefautsBtn}}:hover {
+                            fill: {{module.app_div_styles.app_div_colors.app_div_restore_defaults_btn_hover_color.color}};
+                        }
+
+                        #{{appRestoreLastSavedBtn}} {
+                            fill: {{module.app_div_styles.app_div_colors.app_div_restore_last_saved_btn_color.color}}
+                        }
+
+                        #{{appRestoreLastSavedBtn}}:hover {
+                            fill: {{module.app_div_styles.app_div_colors.app_div_restore_last_saved_btn_color.color}};
+                        }
+
+                    {% end_scope_css %} 
+                </style>
+                {% end_require_css %}
+        {% endif %}
+    {% endif %}
+
+    {# styles for fixed full height #}
+    {% if module.app_div_styles.app_div_position.app_div_position_size == 'div--position--size--full--height' %}
+        {# enter from left #}
+        {% if module.app_div_styles.app_div_position.app_div_position_enter_from_left %}
+            {% require_css %}
+                <style id = "ihs-era-style_{{name}}_fixed_position_styles_{{module.external_react_app_root_div}}">
+                    {% scope_css %}
+                        #{{divForStyling}} {              
+                            display:none;
+                            position: fixed;
+                            top: 0;
+                            left: 0;
+                            height: 100%;
+                            border-radius:0;
+                            border:none;
+                            border-right: solid 1px #eaeaea;
+                            box-shadow:none;
+                        }
+
+                        {# when using calc, a space must be added before and after '+' sign, otherwise the css will be not valid #}
+                        #{{module.external_react_app_root_div}} {
+                            padding-top:calc({{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.top.value}}{{module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.top.units ~ ' ' }} + {{ ' ' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.top.value }}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.top.units }});
+                            padding-left:calc({{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.left.value}}{{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.left.units ~ ' ' }} + {{  ' ' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.left.value }}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.left.units }});
+                            padding-bottom: calc({{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.bottom.value }}{{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.bottom.units ~ ' ' }} + {{ ' ' ~  module.app_div_styles.app_div_styles_spacing.app_spacing.padding.bottom.value }}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.bottom.units }});
+                            padding-right:calc({{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.right.value}}{{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.right.units ~ ' ' }}+ {{ ' ' ~  module.app_div_styles.app_div_styles_spacing.app_spacing.padding.right.value }}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.right.units }});
+
+                            margin-top: calc({{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.margin.top.value}}{{module.app_div_styles.app_div_styles_spacing.app_extra_spacing.margin.top.units ~ ' ' }} + {{' ' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.margin.top.value}}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.margin.top.units}});
+                            margin-bottom: calc({{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.margin.bottom.value}}{{module.app_div_styles.app_div_styles_spacing.app_extra_spacing.margin.bottom.units ~ ' ' }} + {{' ' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.margin.bottom.value}}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.margin.bottom.units}});
+                        }
+
+                        #{{divHeaderContainer}} { 
+                            height: 80px;
+                            background: #eaeaea;
+                            position: absolute;
+                        
+                            margin-top: calc({{ '-' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.margin.top.value}}{{module.app_div_styles.app_div_styles_spacing.app_spacing.margin.top.units }} + {{ '-' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.top.value}}{{module.app_div_styles.app_div_styles_spacing.app_spacing.padding.top.units }});
+
+                            margin-left: calc( {{ '-' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.left.value}}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.left.units }} + 0px);
+
+                            padding-top: 20px;
+
+                            padding-left: calc({{' (' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.left.value}}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.left.units ~ ')'}} + 20px);
+
+                            background: {{module.app_div_styles.app_div_colors.app_div_header_background_color.color}}
+                        }
+
+                        #{{appTitleId}} {
+                            color: {{module.app_div_styles.app_div_colors.app_div_header_title_color.color}};
+                            width: 80%;
+                        }
+
+                        #{{appCloseBtn}} {
+                            fill: {{module.app_div_styles.app_div_colors.app_div_close_btn_color.color}}
+                        }
+
+                        #{{appCloseBtn}}:hover {
+                            fill: {{module.app_div_styles.app_div_colors.app_div_close_btn_hover_color.color}};
+                        }
+
+                        #{{appMaximiseBtn}} {
+                        fill: {{module.app_div_styles.app_div_colors.app_div_maximise_btn_color.color}}
+                        }
+
+                        #{{appMaximiseBtn}}:hover {
+                            fill: {{module.app_div_styles.app_div_colors.app_div_maximise_btn_hover_color.color}};
+                        }
+
+                        #{{appRestoreDefautsBtn}} {
+                            fill: {{module.app_div_styles.app_div_colors.app_div_restore_defaults_btn_color.color}}
+                        }
+
+                        #{{appRestoreDefautsBtn}}:hover {
+                            fill: {{module.app_div_styles.app_div_colors.app_div_restore_defaults_btn_hover_color.color}};
+                        }
+
+                        #{{appRestoreLastSavedBtn}} {
+                            fill: {{module.app_div_styles.app_div_colors.app_div_restore_last_saved_btn_color.color}}
+                        }
+
+                        #{{appRestoreLastSavedBtn}}:hover {
+                            fill: {{module.app_div_styles.app_div_colors.app_div_restore_last_saved_btn_color.color}};
+                        }
+
+                    {% end_scope_css %} 
+                </style>
+            {% end_require_css %}
+        {# enter from right #}
+        {% else %}
+            {% require_css %}
+                <style id = "ihs-era-style_{{name}}_fixed_position_styles_{{module.external_react_app_root_div}}">
+                    {% scope_css %}
+                        #{{divForStyling}} {              
+                            display:none;
+                            position: fixed;
+                            top: 0;
+                            right:0;
+                            height: 100%;
+                            border-radius:0;
+                            border:none;
+                            border-left: solid 1px #eaeaea;
+                            box-shadow:none;
+                        }
+
+                        #{{module.external_react_app_root_div}} {
+                            padding-top:calc({{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.top.value}}{{module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.top.units ~ ' ' }} + {{ ' ' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.top.value }}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.top.units }});
+                            padding-left:calc({{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.left.value}}{{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.left.units ~ ' ' }} + {{  ' ' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.left.value }}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.left.units }});
+                            padding-bottom: calc({{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.bottom.value }}{{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.bottom.units ~ ' ' }} + {{ ' ' ~  module.app_div_styles.app_div_styles_spacing.app_spacing.padding.bottom.value }}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.bottom.units }});
+                            padding-right:calc({{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.right.value}}{{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.right.units ~ ' ' }}+ {{ ' ' ~  module.app_div_styles.app_div_styles_spacing.app_spacing.padding.right.value }}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.right.units }});
+
+                            margin-top: calc({{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.margin.top.value}}{{module.app_div_styles.app_div_styles_spacing.app_extra_spacing.margin.top.units ~ ' ' }} + {{' ' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.margin.top.value}}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.margin.top.units}});
+                            margin-bottom: calc({{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.margin.bottom.value}}{{module.app_div_styles.app_div_styles_spacing.app_extra_spacing.margin.bottom.units ~ ' ' }} + {{' ' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.margin.bottom.value}}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.margin.bottom.units}});
+                        }
+
+                    #{{divHeaderContainer}} { 
+                        height: 80px;
+                        background: #eaeaea;
+                        position: absolute;
+                        
+                        margin-top: calc({{ '-' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.margin.top.value}}{{module.app_div_styles.app_div_styles_spacing.app_spacing.margin.top.units }} + {{ '-' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.top.value}}{{module.app_div_styles.app_div_styles_spacing.app_spacing.padding.top.units }});
+
+                        margin-left: {{ '-' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.left.value}}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.left.units }};
+
+                        padding-top: 20px;
+
+                        padding-left: calc({{' (' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.left.value}}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.left.units ~ ')'}} + 20px);
+
+                        background: {{module.app_div_styles.app_div_colors.app_div_header_background_color.color}}
+                    }
+
+                    #{{appTitleId}} {
+                        color: {{module.app_div_styles.app_div_colors.app_div_header_title_color.color}};
+                        width: 80%;
+                    }
+
+                    #{{appCloseBtn}} {
+                        fill: {{module.app_div_styles.app_div_colors.app_div_close_btn_color.color}}
+                    }
+
+                    #{{appCloseBtn}}:hover {
+                        fill: {{module.app_div_styles.app_div_colors.app_div_close_btn_hover_color.color}};
+                    }
+
+                    #{{appMaximiseBtn}} {
+                    fill: {{module.app_div_styles.app_div_colors.app_div_maximise_btn_color.color}}
+                    }
+
+                    #{{appMaximiseBtn}}:hover {
+                        fill: {{module.app_div_styles.app_div_colors.app_div_maximise_btn_hover_color.color}};
+                    }
+
+                    #{{appRestoreDefautsBtn}} {
+                        fill: {{module.app_div_styles.app_div_colors.app_div_restore_defaults_btn_color.color}}
+                    }
+
+                    #{{appRestoreDefautsBtn}}:hover {
+                        fill: {{module.app_div_styles.app_div_colors.app_div_restore_defaults_btn_hover_color.color}};
+                    }
+
+                    #{{appRestoreLastSavedBtn}} {
+                        fill: {{module.app_div_styles.app_div_colors.app_div_restore_last_saved_btn_color.color}}
+                    }
+
+                    #{{appRestoreLastSavedBtn}}:hover {
+                        fill: {{module.app_div_styles.app_div_colors.app_div_restore_last_saved_btn_color.color}};
+                    }
+
+                    {% end_scope_css %} 
+                </style>
+            {% end_require_css %}
+        {% endif %}
+    {% endif %}
+
+    {% if module.app_div_styles.app_div_position.app_div_position_size == 'div--position--size--full--screen' %}
+        {% require_css %}
+            <style id = "ihs-era-style_{{name}}_fixed_position_styles_{{module.external_react_app_root_div}}">
+                {% scope_css %}
+                    #{{divForStyling}} {              
+                        display:none;
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width:100%;
+                        height: 100%;
+                        border-radius:0;
+                        border:none;
+                        box-shadow:none;
+                    }
+
+                    #{{module.external_react_app_root_div}} {
+                        padding-top:calc({{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.top.value}}{{module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.top.units ~ ' ' }} + {{ ' ' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.top.value }}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.top.units }});
+                        padding-left:calc({{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.left.value}}{{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.left.units ~ ' ' }} + {{  ' ' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.left.value }}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.left.units }});
+                        padding-bottom: calc({{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.bottom.value }}{{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.bottom.units ~ ' ' }} + {{ ' ' ~  module.app_div_styles.app_div_styles_spacing.app_spacing.padding.bottom.value }}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.bottom.units }});
+                        padding-right:calc({{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.right.value}}{{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.padding.right.units ~ ' ' }}+ {{ ' ' ~  module.app_div_styles.app_div_styles_spacing.app_spacing.padding.right.value }}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.right.units }});
+
+                        margin-top: calc({{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.margin.top.value}}{{module.app_div_styles.app_div_styles_spacing.app_extra_spacing.margin.top.units ~ ' ' }} + {{' ' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.margin.top.value}}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.margin.top.units}});
+                        margin-bottom: calc({{ module.app_div_styles.app_div_styles_spacing.app_extra_spacing.margin.bottom.value}}{{module.app_div_styles.app_div_styles_spacing.app_extra_spacing.margin.bottom.units ~ ' ' }} + {{' ' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.margin.bottom.value}}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.margin.bottom.units}});
+                    }
+
+                    #{{module.external_react_app_root_div}} {
+                        margin-top: calc(115px + {{ ' ' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.margin.top.value}}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.margin.top.units}} - {{ ' ' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.top.value }}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.top.units }});
+                    }
+
+                    #{{divHeaderContainer}} { 
+                        height: 80px;
+                        background: #eaeaea;
+                        position: absolute;
+            
+                        margin-top: calc({{ '-' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.margin.top.value}}{{module.app_div_styles.app_div_styles_spacing.app_spacing.margin.top.units }} + {{ '-' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.top.value}}{{module.app_div_styles.app_div_styles_spacing.app_spacing.padding.top.units }});
+
+                        margin-left: {{ '-' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.left.value}}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.left.units }};
+
+                        padding-top: 20px;
+
+                        padding-left: calc({{' (' ~ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.left.value}}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.left.units ~ ')'}} + 20px);
+
+                        background: {{module.app_div_styles.app_div_colors.app_div_header_background_color.color}}
+                    }
+
+                    #{{appTitleId}} {
+                        color: {{module.app_div_styles.app_div_colors.app_div_header_title_color.color}};
+                        width: 80%;
+                    }
+
+                    #{{appCloseBtn}} {
+                        fill: {{module.app_div_styles.app_div_colors.app_div_close_btn_color.color}}
+                    }
+
+                    #{{appCloseBtn}}:hover {
+                        fill: {{module.app_div_styles.app_div_colors.app_div_close_btn_hover_color.color}};
+                    }
+
+                    #{{appMaximiseBtn}} {
+                    fill: {{module.app_div_styles.app_div_colors.app_div_maximise_btn_color.color}}
+                    }
+
+                    #{{appMaximiseBtn}}:hover {
+                        fill: {{module.app_div_styles.app_div_colors.app_div_maximise_btn_hover_color.color}};
+                    }
+
+                    #{{appRestoreDefautsBtn}} {
+                        fill: {{module.app_div_styles.app_div_colors.app_div_restore_defaults_btn_color.color}}
+                    }
+
+                    #{{appRestoreDefautsBtn}}:hover {
+                        fill: {{module.app_div_styles.app_div_colors.app_div_restore_defaults_btn_hover_color.color}};
+                    }
+
+                    #{{appRestoreLastSavedBtn}} {
+                        fill: {{module.app_div_styles.app_div_colors.app_div_restore_last_saved_btn_color.color}}
+                    }
+
+                    #{{appRestoreLastSavedBtn}}:hover {
+                        fill: {{module.app_div_styles.app_div_colors.app_div_restore_last_saved_btn_color.color}};
+                    }
+
+                {% end_scope_css %} 
+            </style>
+        {% end_require_css %}
+    {% endif %}
+
+{% endmacro %}
+
+{% macro set_styles_mobile() %}
+    {% require_css %}
+        <style id = "ihs-era-style_{{ name }}_styles_mobile">
+            {% scope_css %}
+                @media only screen and (max-width: 768px) {
+                    #{{divForStyling}} {              
+                        display:none;
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        border:none;
+                        border-radius:0;
+                    }
+
+                    #{{module.external_react_app_root_div}} {
+                        padding:0px;
+                        margin-top:calc({{ module.app_div_styles.app_div_styles_spacing.app_spacing.margin.top.value}}{{module.app_div_styles.app_div_styles_spacing.app_spacing.margin.top.units ~ ' ' }} + 115px);
+                    }
+
+                    #{{divHeaderContainer}} {
+                        width: 100%;
+                        border-bottom: solid 1px #eaeaea;
+                        margin-bottom:10px;
+                        position: fixed;
+                    }
+
+                    #{{appTitleId}} {
+                        font-size: 16px;
+                    }
+                }
+            {% end_scope_css %} 
+        </style>
+    {% end_require_css %}
+{% endmacro %}
+
+{% macro set_draggable_styles() %}
+    {% set headerDiv = module.external_react_app_root_div ~ '_ihs_era_container_close_btn' %}
+    {% require_css %}
+        <style id = "ihs-era-style_{{ name }}_fixed_position_styles">
+            {% scope_css %}
+                #{{headerDiv}} {              
+                    cursor: move;
+                }
+            {% end_scope_css %} 
+        </style>
+    {% end_require_css %}
+    
+{% endmacro %}
+
+{# apply module inline styles #}
+{{ set_general_styles() }}
+
+{# apply module fixed position styles #}
+{% if appPosition == 'div--position--fixed' %}
+    {{ set_fixed_position_styles() }}
+    {{ set_styles_mobile() }}
+    {% if module.app_div_styles.app_div_position.app_div_position_draggable && module.app_div_styles.app_div_position.app_div_position_size != 'div--position--size--full--width'  && module.app_div_styles.app_div_position.app_div_position_size != 'div--position--size--full--height' && module.app_div_styles.app_div_position.app_div_position_size != 'div--position--size--full--screen'%}
+        {{ set_draggable_styles() }}
+    {% endif %}
+{% endif %}
+
+{# END APPLY MODULE STYLES #}
+{# ------------------------------- #}
+
+{# MODULE INLINE SCRIPTS #}
+
+{# inline scripts macros #}
+{# making it draggable only if not on mobile #}
+{% macro make_module_draggable() %}
+    {% if module.app_div_styles.app_div_position.app_div_position_size != 'div--position--size--full--width'  && module.app_div_styles.app_div_position.app_div_position_size != 'div--position--size--full--height' && module.app_div_styles.app_div_position.app_div_position_size != 'div--position--size--full--screen'%}
+
+        {% require_js position="footer" %}
+            <script>
+                if (!window.matchMedia("only screen and (max-width: 768px)").matches) 
+                    $('#{{divForStyling}}').draggable({
+                        containment:'window', 
+                        cursor: 'move',
+
+                        stop: function(event, ui) {
+                                if (typeof IHSBEStore !=='undefined' ) {
+                                    let appPositionInfo = {};
+                                    appPositionInfo.callType = 'position';
+                                    appPositionInfo.appPage = '{{ content.name|striptags }}';
+                                    appPositionInfo.appRootDiv = '{{ module.external_react_app_root_div }}';
+                                    appPositionInfo.top = parseInt($('#{{divForStyling}}').position().top);
+                                    appPositionInfo.left = parseInt($('#{{divForStyling}}').position().left);      
+                                    IHSBEStore.dispatch({ type: 'IHS_HS_UPDATE_ERA_POSITION_XY', payload: appPositionInfo});
+                                }
+                            }
+                        });
+            </script>
+        {% end_require_js %}
+    {% endif %}
+{% endmacro %}
+
+{# making it resizable only if not on mobile #}
+{% macro make_module_resizable() %}
+    {% if module.app_div_styles.app_div_position.app_div_position_size != 'div--position--size--full--width'  && module.app_div_styles.app_div_position.app_div_position_size != 'div--position--size--full--height' && module.app_div_styles.app_div_position.app_div_position_size != 'div--position--size--full--screen'%}
+    
+    {% require_js position="footer" %}
+        <script>
+            if (!window.matchMedia("only screen and (max-width: 768px)").matches) 
+                $('#{{divForStyling}}').resizable({
+                    containment: "body", 
+                    autoHide: false, 
+                    handles: "se", 
+                    minHeight: 500, 
+                    minWidth: 600,
+                    
+                    stop: function(e, ui) {
+                        if (typeof IHSBEStore !=='undefined' ) {
+                            let appSizeInfo = {};
+                            appSizeInfo.callType = 'size';
+                            appSizeInfo.appPage = '{{ content.name|striptags }}';
+                            appSizeInfo.appRootDiv = '{{ module.external_react_app_root_div }}';
+                            appSizeInfo.width = parseInt($('#{{divForStyling}}').width());
+                            appSizeInfo.height = parseInt($('#{{divForStyling}}').height());
+                            appSizeInfo.width = appSizeInfo.width <600 ? 600 : appSizeInfo.width;
+                            appSizeInfo.height = appSizeInfo.height <500 ? 500 : appSizeInfo.height;
+                            IHSBEStore.dispatch({ type: 'IHS_HS_UPDATE_ERA_SIZE', payload: appSizeInfo});
+                        }
+                    },
+
+                    resize: function(e,ui) {
+                        const divT = $('#{{divForStyling}}').offset().top - $(window).scrollTop();
+                        const divH = parseInt($('#{{divForStyling}}').height());
+                        const wH = $(window).height();
+                        const divB = divT + divH + {{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.top.value }} + {{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.bottom.value }};
+
+                        const newDivH = wH- divT - 20;
+
+                        if (divB > wH) $('#{{divForStyling}}').prop('style').setProperty('height', newDivH + 'px');
+                    }
+                    
+                });
+        </script>
+    {% end_require_js %}
+
+    {% endif %}
+
+    {% if module.app_div_styles.app_div_position.app_div_position_size == 'div--position--size--full--width' %}
+        {# enter from top #}
+        {% if module.app_div_styles.app_div_position.app_div_position_enter_from_top %}
+
+            {% require_js position="footer" %}
+                <script>
+                    if (!window.matchMedia("only screen and (max-width: 768px)").matches) 
+                        $('#{{divForStyling}}').resizable({
+                            containment: "body", 
+                            autoHide: false, 
+                            handles: "s", 
+                            minHeight: 500,
+                            
+                            stop: function(e, ui) {
+                                if (typeof IHSBEStore !=='undefined' ) {
+                                    let appSizeInfo = {};
+                                    appSizeInfo.callType = 'size';
+                                    appSizeInfo.appPage = '{{ content.name|striptags }}';
+                                    appSizeInfo.appRootDiv = '{{ module.external_react_app_root_div }}';
+                                    appSizeInfo.width = 0;
+                                    appSizeInfo.height = parseInt($('#{{divForStyling}}').height());
+                                    appSizeInfo.height = appSizeInfo.height <500 ? 500 : appSizeInfo.height;  
+                                    IHSBEStore.dispatch({ type: 'IHS_HS_UPDATE_ERA_SIZE', payload: appSizeInfo});
+                                }
+                            }
+    
+                        
+                        });
+                </script>
+            {% end_require_js %}
+        {# enter from bottom #}
+        {% else %}
+            {% require_js position="footer" %}
+                <script>
+                    if (!window.matchMedia("only screen and (max-width: 768px)").matches) 
+                        $('#{{divForStyling}}').resizable({
+                            containment: "body", 
+                            autoHide: false, 
+                            handles: "n", 
+                            minHeight: 500,
+    
+                            resize: function(e, ui) {
+                                const divH = $('#{{divForStyling}}').height();
+                                const wH = $(window).height();
+                                const divT = $('#{{divForStyling}}').position().top;
+                                const gap = wH - divT - divH;
+                                $('#{{divForStyling}}').prop('style').setProperty('height', divH + gap +'px', 'important');
+                            },
+    
+                            stop: function(e, ui) {
+                                const divH = $('#{{divForStyling}}').height();
+                                const wH = $(window).height();
+                                const divT = $('#{{divForStyling}}').position().top;
+                                const gap = wH - divT - divH;
+                                $('#{{divForStyling}}').prop('style').setProperty('height', divH + gap +'px', 'important');
+    
+                                if (typeof IHSBEStore !=='undefined' ) {
+                                    let appSizeInfo = {};
+                                    appSizeInfo.callType = 'size';
+                                    appSizeInfo.appPage = '{{ content.name|striptags }}';
+                                    appSizeInfo.appRootDiv = '{{ module.external_react_app_root_div }}';
+                                    appSizeInfo.width = 0;
+                                    appSizeInfo.height = parseInt($('#{{divForStyling}}').height());
+                                    appSizeInfo.height = appSizeInfo.height <500 ? 500 : appSizeInfo.height;  
+                                    IHSBEStore.dispatch({ type: 'IHS_HS_UPDATE_ERA_SIZE', payload: appSizeInfo});
+                                }
+                            }
+    
+                        });
+                </script>
+            {% end_require_js %}
+        {% endif %}
+    {% endif %}
+
+    {% if module.app_div_styles.app_div_position.app_div_position_size == 'div--position--size--full--height' %}
+        {# enter from left #}
+        {% if module.app_div_styles.app_div_position.app_div_position_enter_from_left %}
+            {% require_js position="footer" %}
+                <script>
+                    if (!window.matchMedia("only screen and (max-width: 768px)").matches) 
+                        $('#{{divForStyling}}').resizable({
+                            containment: "body", 
+                            autoHide: false, 
+                            handles: "e", 
+                            minWidth: 600,
+    
+                            stop: function(e, ui) {
+                            if (typeof IHSBEStore !=='undefined' ) {
+                                let appSizeInfo = {};
+                                appSizeInfo.callType = 'size';
+                                appSizeInfo.appPage = '{{ content.name|striptags }}';
+                                appSizeInfo.appRootDiv = '{{ module.external_react_app_root_div }}';
+                                appSizeInfo.width = parseInt($('#{{divForStyling}}').width());
+                                appSizeInfo.height = 0;
+                                appSizeInfo.width = appSizeInfo.width <600 ? 600 : appSizeInfo.width;      
+                                IHSBEStore.dispatch({ type: 'IHS_HS_UPDATE_ERA_SIZE', payload: appSizeInfo});
+                            }
+                        }        
+                    });
+                </script>
+            {% end_require_js %}
+        {# enter from right #}
+        {% else %}
+            {% require_js position="footer" %}
+                <script>
+                if (!window.matchMedia("only screen and (max-width: 768px)").matches) 
+                    $('#{{divForStyling}}').resizable({
+                        containment: "body", 
+                        autoHide: false, 
+                        handles: "w", 
+                        minWidth: 600, 
+    
+                        {# stop and resize callbacks are needed because resize use to jump the div element to the left when entrance is from right or bottom #}
+                        {# not needed when entrance is from left (default) or top #}
+                        stop: function(e, ui) {
+                                const divW = $('#{{divForStyling}}').width();
+                                const wW = $(window).width();
+                                const divL = $('#{{divForStyling}}').position().left;
+                                const gap = wW - divL - divW;
+                                $('#{{divForStyling}}').prop('style').setProperty('width', divW + gap +'px', 'important');
+    
+                                if (typeof IHSBEStore !=='undefined' ) {
+                                    let appSizeInfo = {};
+                                    appSizeInfo.callType = 'size';
+                                    appSizeInfo.appPage = '{{ content.name|striptags }}';
+                                    appSizeInfo.appRootDiv = '{{ module.external_react_app_root_div }}';
+                                    appSizeInfo.width = parseInt($('#{{divForStyling}}').width());
+                                    appSizeInfo.height = 0;
+                                    appSizeInfo.width = appSizeInfo.width <600 ? 600 : appSizeInfo.width;  
+                                    IHSBEStore.dispatch({ type: 'IHS_HS_UPDATE_ERA_SIZE', payload: appSizeInfo});
+                                }
+                            },
+    
+                        resize: function(e, ui) {
+                                const divW = $('#{{divForStyling}}').width();
+                                const wW = $(window).width();
+                                const divL = $('#{{divForStyling}}').position().left;
+                                const gap = wW - divL - divW;
+                                $('#{{divForStyling}}').prop('style').setProperty('width', divW + gap +'px', 'important');
+                            }
+                    });
+                </script>
+            {% end_require_js %}
+        {% endif %}
+    {% endif %}
+
+{% endmacro %}
+
+{# show app on page #}
+{% macro era_module_in() %}
+    {% if module.app_div_styles.app_div_position.app_div_position_size != 'div--position--size--full--width'  && module.app_div_styles.app_div_position.app_div_position_size != 'div--position--size--full--height' %}
+        {% require_js position="footer" %}
+            <script>
+                function toggle_ihs_era_{{module.external_react_app_root_div}}() {
+                    $('#{{divForStyling}}').prop('style').setProperty('display', 'flex');
+                    $('#{{divForStyling}}').fadeIn('slow');
+                }
+            </script>
+        {% end_require_js %}
+    {% endif %}
+
+    {% if module.app_div_styles.app_div_position.app_div_position_size == 'div--position--size--full--width' %}
+        {% if module.app_div_styles.app_div_position.app_div_position_enter_from_top %}
+            {% require_js position="footer" %}
+                <script>
+                    function toggle_ihs_era_{{module.external_react_app_root_div}}() {
+                        $('#{{divForStyling}}').prop('style').setProperty('display', 'flex');
+                        $('#{{divForStyling}}').hide();
+                        $('#{{divForStyling}}').toggle('slide', {direction: "up"});
+                    };
+                </script>
+            {% end_require_js %}
+        {% else %}
+            {% require_js position="footer" %}
+                <script>
+                    function toggle_ihs_era_{{module.external_react_app_root_div}}() {
+                        $('#{{divForStyling}}').prop('style').setProperty('display', 'flex');
+                        $('#{{divForStyling}}').hide();
+                        $('#{{divForStyling}}').toggle('slide', {direction: "down"});
+                    };
+                </script>
+            {% end_require_js %}
+        {% endif %}
+    {% endif %}
+
+    {% if module.app_div_styles.app_div_position.app_div_position_size == 'div--position--size--full--height' %}
+        {% if module.app_div_styles.app_div_position.app_div_position_enter_from_left %}
+            {% require_js position="footer" %}
+                <script>
+                    function toggle_ihs_era_{{module.external_react_app_root_div}}() {
+                        $('#{{divForStyling}}').prop('style').setProperty('display', 'flex');
+                        $('#{{divForStyling}}').hide();
+                        $('#{{divForStyling}}').toggle('slide');
+                    };
+                </script>
+            {% end_require_js %}
+        {% else %}
+            {% require_js position="footer" %}
+                <script>
+                    function toggle_ihs_era_{{module.external_react_app_root_div}}() {
+                        $('#{{divForStyling}}').prop('style').setProperty('display', 'flex');
+                        $('#{{divForStyling}}').hide();
+                        $('#{{divForStyling}}').toggle('slide', {direction: "right"});
+                    };
+                </script>
+            {% end_require_js %}
+        {% endif %}
+    {% endif %}
+
+{% endmacro %}
+
+{# execute module inline scripts #}
+{% if moduleInfo.appRootDiv != 'no_root_div' %}
+    {{ era_module_in() }}
+    {% if appPosition == 'div--position--fixed' && module.app_div_styles.app_div_position.app_div_position_draggable %}
+        {{ make_module_draggable() }}
+        {{ make_module_resizable() }}
+    {% endif %}
+{% endif %}
+
+{# END MODULE INLINE SCRIPTS #}
+{# ------------------------------- #}

@@ -1,0 +1,94 @@
+{% macro load_auth0_sdk(ei) %}
+
+    {% set available = ei.siteSettings.auth0.available %}
+    {% set editMode = ei.editMode %}
+    {% if available && !editMode %}
+
+        {% set apiVersion = ei.siteSettings.auth0.apiVersion %}
+        {% set apiScript = ei.siteSettings.auth0.apiScript %}
+        {% set apiCDN = ei.siteSettings.auth0.apiCDN %}
+        
+        {% set sdk = apiCDN  ~ apiVersion ~ "/" ~  apiScript %}
+        {{require_js(sdk, { position: "head", defer:false })}}
+
+    {% endif %}
+
+    {% set showAuth0InfoInEditor = ei.siteSettings.auth0.showAuth0InfoInEditor %}
+    {% if available && editMode && showAuth0InfoInEditor %}
+        {% import "/ihs-macros/page-elements.html" as elements %}
+        {{ elements.auth0_info_panel() }}
+    {% endif %}
+
+{% endmacro %}
+
+{% macro init_auth0(ei) %}
+    {% set available = ei.siteSettings.auth0.available %}
+    {% set editMode = ei.editMode %}
+
+    {% if available && !editMode %}
+
+        {% set clientID = ei.siteSettings.auth0.app.clientID %}
+        {% set domain = ei.siteSettings.auth0.app.domain %}
+        
+        {% require_js position="footer" %}
+            <script id = "ihs-init-auth0">
+                let webAuth = new auth0.WebAuth({
+                    domain: '{{domain}}',
+                    clientID: '{{clientID}}',
+                    redirectUri: window.location.href,
+                    responseType: 'token id_token code'
+                });                      
+            </script>
+        {% end_require_js %}
+
+    {% endif %}
+
+    {% set linkStyle = ei.siteSettings.auth0.authLinks.style %}
+    
+    {% if linkStyle %}
+        {% set linkSelector = ei.siteSettings.auth0.authLinks.selector|join(',') %}
+        {% require_css %}
+            <style id = "ihs-auth-links-style">
+                {{linkSelector}} {
+                    font-weight: normal;
+                    padding-left: 16px;
+                    padding-right: 16px;
+                    padding-top: 4px;
+                    padding-bottom: 4px;
+                    border: solid 1px #ff6200;
+                    border-radius: 5px;
+                }
+
+                {{linkSelector}} span {
+                    padding:0 !important
+                }
+
+                @media only screen and (max-width: 768px) {
+                    {{linkSelector}} {
+                        font-weight: normal;
+                        border: solid 1px #ff6200;
+                        border-radius: 5px;
+                    }     
+                }
+
+                .ihs-auth-spinner {
+                    height:14px;
+                    margin-top:10px
+                }
+                
+            </style>
+        {% end_require_css %}
+    {% endif %}
+
+{%endmacro %}
+
+{% macro load_ihs_auth0(ei) %}
+
+    {% set available = ei.siteSettings.auth0.available %}
+    {% set editMode = ei.editMode %}
+
+    {% if available && !editMode %}
+        {{ require_js(get_asset_url("/ihs-auth0/ihs-auth0.js"), { position: "footer", async:false, defer:true }) }}
+    {% endif %}
+
+{% endmacro %}

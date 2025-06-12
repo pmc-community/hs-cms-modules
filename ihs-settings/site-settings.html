@@ -1,0 +1,119 @@
+{% set siteSettings = {
+        "statusPageWidget": {
+            "available": true,
+            "location":"https://innohub.statuspage.io/",
+            "whereToAppend":".kl-footer__info",
+            "showAs":"badge",
+            "version": "2.1.3"
+        },
+        "jQuery": {
+            "jQueryVersion": "3.6.0",
+            "jQueryMigrateVersion": "3.3.2",
+            "jQueryUIVersion": "1.13.2"
+        },
+        "mui": {
+            "muiVersion": "latest"
+        },
+        "lodash":{
+            "version":"4.17.21",
+            "location":"https://cdn.jsdelivr.net/npm/"
+        },
+        "throwToConsole":false, 
+        "enableAsyncReducers":true,
+        "applyDOMCorrections":true,
+        "customiseHSCookieSettings":true,
+        "clearWeirdTags":true,
+        "openFooterLinksInNewTab":true,
+        "openSocialLinksInNewTab":true,
+        "showSiteSettingsInEditor":true,
+        "dynamicPageHeader":{
+            "active": true,
+            "headerSelector":".kl-header",
+            "mainSelector":"main"
+        },
+        "goToTopBtn":{
+            "active":true,
+            "mainSelector": "main",
+            "smart":true,
+            "toHideSelector": ".kl-footer__legal p span",
+            "hideOnMobileOnly":true,
+            "color": "#ff6200",
+            "hoverColor": "#3574E3",
+            "size":32
+        },
+        "legalWidget": {
+            "active": true,
+            "whereTo": ".kl-footer__info",
+            "linkColor": "#fff",
+            "linkHoverColor": "#ff6200",
+            "separatorColor": "#fff",
+            "fontSize": "12px",
+            "cookieSettingsBtnBackgroundColor": "#ff6200",
+            "cookieSettingsBtnFontColor":"#fff",
+            "cookieSettingsBtnFontSize":"14px",
+            "terms":{
+                "active": true,
+                "text": "TERMS",
+                "link": "https://innohub.space/eng/terms-of-service/"
+            },
+            "privacy":{
+                "active": true,
+                "text": "PRIVACY",
+                "link": "https://innohub.space/eng/privacy/"
+            },
+            "cookies":{
+                "active": true,
+                "text": "COOKIES",
+                "link": "https://innohub.space/eng/cookie-policy/",
+                "hsCookieSettings":true
+            }
+        },
+        "APP_NAME": "ihsHubspotFrontEnd", 
+        "REQUEST_REDUX_STORE": "give-backend-store", 
+        "REDUX_SYNC_CHANNEL": "ihs_redux_state_sync", 
+        "REDUX_STORE_BROADCAST":"broadcast-backend-store",
+        "REDUX_STATE_CHANGED":"ihs-redux-state-changed",
+        "specificPageClass": "IHSCSpecificHSSitePage",
+        "globalScripts": {
+            "loadLocal":true,
+            "useMinifiedVersions":false,
+            "packageName": "global-ihs-init-for-web-apps",
+            "jsCDN":"unpkg.com",
+            "packageVersion": "1.10.1",
+            "scripts":[
+                "globals.js", 
+                "ihs-main.js", 
+                "jquery.mark.js",
+                "recursive-diff.js"
+            ]
+        },
+        "cleanAfterLoad":{
+            "active": true,
+            "elements":[
+                "#ihs-status-page-script", 
+                "#ihs-legal-widget-script"
+            ]
+        },
+        "auth0":{
+            "IHS_AUTH0_EVENT":"ihs_auth0_event",
+            "showAuth0InfoInEditor":true,
+            "registrationLink":"https://innohub.space/register/",
+            "loginLinkText":"Login",
+            "logoutLinkText":"Logout",
+            "registrationLinkText":"SignUp",
+            "available":true,
+            "apiVersion":"9.18",
+            "apiScript":"auth0.min.js",
+            "apiCDN":"https://cdn.auth0.com/js/auth0/",
+            "app":{
+                "domain":"innohub.eu.auth0.com",
+                "clientID":"eKuiR1cOUHWscthHCBcGXiJLaGCLXAdk"
+            },
+            "authLinks":{
+                "selector":[".kl-navbar__button:not(.kl-navbar__dropdown)"],
+                "style":true
+            }
+        }
+    }
+   
+%}

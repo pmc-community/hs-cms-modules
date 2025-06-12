@@ -1,0 +1,3 @@
+#!/bin/bash
+#hs remove ihs-redux
+hs upload ihs-redux ihs-redux

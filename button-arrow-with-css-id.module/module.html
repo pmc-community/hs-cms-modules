@@ -1,0 +1,42 @@
+<!-- module html  -->
+<!-- module html  -->
+{% set css_id = module.button_css_id %}
+
+    <button class="hs-button button--arrow" id="{{ css_id }}">
+      {{ module.button_text }}
+    </button>
+    
+    {% if module.style.override_default_style %}
+    <style>
+      #{{ css_id }} {
+        background-color: rgba({{ module.style.button_color.color|convert_rgb }},{{ module.style.button_color.opacity / 100 }});
+        color: {{ module.style.button_font.color }};
+        font-size: {{ module.style.button_font.size }}{{ module.style.button_font.size_unit }};
+        {{ module.style.button_font.style }}
+      }
+      #{{ css_id }}:hover {
+        background-color: rgba({{ module.style.button_hover_color.color|convert_rgb }},{{ module.style.button_hover_color.opacity / 100 }});
+        color: rgba({{ module.style.text_hover_color.color|convert_rgb }},{{ module.style.text_hover_color.opacity / 100 }});"
+      }
+    </style>
+    {% endif %}
+
+
+  {# button action handler #}
+  <script>
+  $(window).on('load', function() {
+    $('#{{css_id}}').on('click', () => {
+      if (typeof IHSBEStore !== 'undefined' && typeof IHSUtilities.broadcastMessage !== 'undefined') {
+        IHSUtilities.broadcastMessage(1, APP_NAME, ' and you hit {{css_id}}');
+        IHSBEStore.dispatch({ type: 'IHS_MAIN_APP_DEFAULT'});
+        IHSBEStore.dispatch({ type: 'IHS_HS_DEFAULT'});
+        IHSBEStore.dispatch({ type: 'IHS_HS_DEFAULT_1'});
+        IHSBEStore.dispatch({ type: 'IHS_HS_TEST_DEFAULT'});          
+      }
+      else console.log ('Hit on: {{css_id}}');
+    });
+  });
+</script>
+
+    
+  

@@ -1,0 +1,3 @@
+#!/bin/bash
+#hs remove ihs-modules/external-react-app.module
+hs upload external-react-app.module ihs-modules/external-react-app.module

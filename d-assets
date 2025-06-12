@@ -1,0 +1,3 @@
+#!/bin/bash
+#hs remove assets
+hs upload ihs-assets ihs-assets

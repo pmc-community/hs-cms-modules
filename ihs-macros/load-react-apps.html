@@ -1,0 +1,164 @@
+
+{# used to load global react apps such as REDUX store or Message Hub #}
+{% macro load_react_app_from_json(appName, rootDiv, deferLoad, whereToLoad)  %}
+    <div id="{{ rootDiv }}" ihs-era-app-name="{{ appName }}" class="ihs-era-app" ihs-era-app-type="global"></div>
+    
+    {% set jsFolder  = "/ihs-res/" ~  appName ~ "/js/" %} 
+    {% set cssFolder  = "/ihs-res/" ~  appName ~ "/css/" %} 
+    
+    {% import "/ihs-res/ihs-res-info/res.html" as ihsResources %}
+    {% set jsFiles = ihsResources.ihsRes[appName].jsFiles %}
+    {% set cssFiles = ihsResources.ihsRes[appName].cssFiles %}
+
+    {# load app js#}
+    {% if jsFiles|length > 0 %}
+        {% for scriptFile in jsFiles %}
+            {% set fileName  = jsFolder ~ scriptFile %}
+            {{ require_js(get_asset_url(fileName), { position: whereToLoad, defer: deferLoad}) }} 
+        {% endfor%}
+    {% endif %}
+
+    {# load app css, can be loaded async and deferred #}
+    {% if cssFiles|length > 0 %}
+        {% for styleFile in cssFiles %}
+            {% set fileName  = cssFolder ~ styleFile %}
+            {{ require_css(get_asset_url(fileName), { position: whereToLoad, async:true, defer: true}) }} 
+        {% endfor%}
+    {% endif %}
+{% endmacro %}
+
+{# used to load any other app, except for the global apps #}
+{# USED IN EXTERNAL REACT APP MODULE, module.html#}
+{% macro load_react_app_from_json_async(appName, rootDiv, appPosition, appTitle, appPositionSize, appType)  %}
+    <style>
+        .blinking{
+            font-size:14px; 
+            font-weight:500;
+            color: {{brandSettings.colors[1].hex}};
+	        animation:blinkingText 0.8s infinite;
+        }
+        @keyframes blinkingText{
+	        0%{ color: {{brandSettings.colors[1].hex}};	}
+	        49%{ color: transparent; }
+	        50%{ color: transparent; }
+	        99%{ color:transparent; }
+	        100%{ color: {{brandSettings.colors[1].hex}}; }
+        }
+    </style>
+
+    {% if appPosition == 'div--position--default' %}
+        {% if appType %}
+            <div id="{{ rootDiv }}" ihs-era-app-name="{{ appName }}" class="ihs-era-app" ihs-era-app-type="HubSpot module"><span class="blinking">Relax, I'm loading ...</span></div>
+        {% else %}
+            <div id="{{ rootDiv }}" ihs-era-app-name="{{ appName }}" class="ihs-era-app" ihs-era-app-type="HubSpot module component"><span class="blinking">Relax, I'm loading ...</span></div>
+        {% endif %}
+    {% else %}
+        <div id="{{ rootDiv }}_ihs_era_container" class = "ihs_era_container">
+            
+            <div id="{{ rootDiv }}_ihs_era_container_header" class = "span12 ihs_era_container_header"><p class="span9 ihs_era_container_header_title" id="{{ rootDiv }}_ihs_era_container_header_title">{{ appTitle }}</p>
+                
+                <span id="{{ rootDiv }}_ihs_era_container_close_btn" class="ihs_era_container_close_btn_container span3">
+                
+                    <span id="{{ rootDiv }}_ihs_era_close_btn" class="ihs_era_container_header_button ihs_era_container_close_btn" data-hs-icon-hubl="true" title="Click to close">{% icon icon_set="fontawesome-5.14.0" name="Circle" style="SOLID" height="14" purpose="decorative" class="ihs_era_container_header_button_icon" %}</span>
+                
+                    <span id="{{ rootDiv }}_ihs_era_set_defaults_btn" class="ihs_era_container_header_button ihs_era_container_set_defaults_btn" data-hs-icon-hubl="true" title="Click to restore default position/size">{% icon icon_set="fontawesome-5.14.0" name="Circle" style="SOLID" height="14" purpose="decorative" class="ihs_era_container_header_button_icon" %}</span>
+                
+                    <span id="{{ rootDiv }}_ihs_era_maximise_btn" class="ihs_era_container_header_button ihs_era_container_maximise_btn" data-hs-icon-hubl="true" title="Click for full screen">{% icon icon_set="fontawesome-5.14.0" name="Circle" style="SOLID" height="14" purpose="decorative" class="ihs_era_container_header_button_icon" %}</span>
+
+                    <span id="{{ rootDiv }}_ihs_era_set_last_saved_btn" class="ihs_era_container_header_button ihs_era_container_set_last_saved_btn" data-hs-icon-hubl="true" title="Click to restore last saved position/size">{% icon icon_set="fontawesome-5.14.0" name="Circle" style="SOLID" height="14" purpose="decorative" class="ihs_era_container_header_button_icon" %}</span>
+                </span>
+
+            </div>
+            
+            {% if appType %}
+                <div id="{{ rootDiv }}" ihs-era-app-name="{{ appName }}" class="ihs-era-app span12" ihs-era-app-type="HubSpot module"><span class="blinking">Relax, I'm loading ...</span></div>
+            {% else %}
+                <div id="{{ rootDiv }}" ihs-era-app-name="{{ appName }}" class="ihs-era-app span12" ihs-era-app-type="HubSpot module component"><span class="blinking">Relax, I'm loading ...</span></div>
+            {% endif %}
+            
+        </div>
+    {% endif %}
+    
+    {% if appType %}
+        {% set jsFolder  = "/ihs-res/" ~  appName ~ "/js/" %} 
+        {% set cssFolder  = "/ihs-res/" ~  appName ~ "/css/" %} 
+    
+        {% import "/ihs-res/ihs-res-info/res.html" as ihsResources %}
+        {% set jsFiles = ihsResources.ihsRes[appName].jsFiles %}
+        {% set cssFiles = ihsResources.ihsRes[appName].cssFiles %}
+
+        {# load app js#}
+        {# better to load js files with async:false, if true, sometimes (usually after clering cache and cookies), it doesn't load the apps and needs page refresh#}
+        {% if jsFiles|length > 0 %}
+            {% for scriptFile in jsFiles %}
+                {% set fileName  = jsFolder ~ scriptFile %}
+                {{ require_js(get_asset_url(fileName), { position: "footer", defer:true, async:false }) }} 
+            {% endfor%}
+        {% endif %}
+
+        {# load app css#}
+        {% if cssFiles|length > 0 %}
+            {% for styleFile in cssFiles %}
+                {% set fileName  = cssFolder ~ styleFile %}
+                {{ require_css(get_asset_url(fileName),  { position: "footer", defer:true, async:true }) }} 
+
+                {# async:true seems to create issues on Firefox #}
+                {# require_css(get_asset_url(fileName),  { position: "footer", async: true, defer:true }) #}
+            {% endfor %}
+        {% endif %}
+    {% endif %}
+
+{% endmacro %}
+
+{% macro injectOwnReducers() %}
+    
+    {% import "/ihs-redux/ihs-redux-info/reduxInfo.html" as reduxInfo %}
+    {% set typesFiles = reduxInfo.ihsRedux.types %}
+    {% set actionsFiles = reduxInfo.ihsRedux.actions %}
+    {% set reducersFiles = reduxInfo.ihsRedux.reducers %}
+
+    {% set typesFolder = '/ihs-redux/types/' %}
+    {% set actionsFolder = '/ihs-redux/actions/' %}
+    {% set reducersFolder = '/ihs-redux/reducers/' %}
+
+    {% if typesFiles|length == 1 && actionsFiles|length > 0 &&  reducersFiles|length > 0 %}
+
+        {# defer may be true but async must be false, otherwise some redux items may be not available mostly in Firefox #}
+
+        {# 1. load types #}
+        {% for typeFile in typesFiles %}
+            {{ require_js(get_asset_url( typesFolder ~ typeFile), { position: "footer", async: false, defer:true }) }} 
+        {% endfor %}
+
+        {# 2. load actions #}
+        {% for actionFile in actionsFiles %}
+            {{ require_js(get_asset_url(actionsFolder ~ actionFile), { position: "footer", async: false, defer:true }) }} 
+        {% endfor %}
+
+        {# 3. load reducers #}
+        {% for reducerFile in reducersFiles %}
+            {{ require_js(get_asset_url(reducersFolder ~ reducerFile), { position: "footer", async: false, defer:true }) }} 
+        {% endfor %}
+
+    {% endif %}
+
+{% endmacro %}
+
+{# this macro is used to load global react apps #}
+{# USED IN GLOBAL CONTENT TO BE LOADED IN EACH PAGE (recommended to be used in footer) #}
+{% macro load_global_react_apps_from_json()  %}
+
+    {# loading the message hub first because other apps may use it #}
+    {{ load_react_app_from_json("ihs-message-hub", "ihs_message_hub_app", false, "footer") }}
+    
+    {# loading the redux store #}
+    {{ load_react_app_from_json("ihs-be-store", "ihs_admin_backend_store_app", false, "footer") }}
+
+    {# AFTER loading the store, load the redux items (actions, reducers) #}
+    {# THE STORE MUST BE AVAILABLE BEFORE LOADING REDUX ITEMS #}
+    {% import "/ihs-settings/site-settings.html" as siteSet %}
+    {% if (siteSet.siteSettings.enableAsyncReducers) %}
+        {{ injectOwnReducers() }}
+    {% endif %}
+
+{% endmacro %}

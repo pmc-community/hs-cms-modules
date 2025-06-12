@@ -1,0 +1,22 @@
+<!-- module html  -->
+{% set css_id = module.button_css_id %}
+
+  <button class="hs-button" id="{{ css_id }}">
+    {{ module.button_text }}
+  </button>
+  
+  {# button style #}
+  {% if module.style.override_default_style %}
+  <style>
+    #{{ css_id }} {
+      background-color: rgba({{ module.style.button_color.color|convert_rgb }},{{ module.style.button_color.opacity / 100 }});
+      color: {{ module.style.button_font.color }};
+      font-size: {{ module.style.button_font.size }}{{ module.style.button_font.size_unit }};
+      {{ module.style.button_font.style }}
+    }
+    #{{ css_id }}:hover {
+      background-color: rgba({{ module.style.button_hover_color.color|convert_rgb }},{{ module.style.button_hover_color.opacity / 100 }});
+      color: rgba({{ module.style.text_hover_color.color|convert_rgb }},{{ module.style.text_hover_color.opacity / 100 }});"
+    }
+  </style>
+  {% endif %}

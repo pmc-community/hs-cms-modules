@@ -1,0 +1,707 @@
+[
+  {
+    "name": "ihs_era_app_type",
+    "label": "Load app files",
+    "required": false,
+    "locked": false,
+    "type": "boolean",
+    "display": "toggle",
+    "inline_help_text": "<span style='color:#ff6200; font-weight:600'>If ON, the external app will be loaded. If OFF, only the root div will be created, the app suppose to be loaded already. Put this to OFF when loading an app component.</span>",
+    "default": true
+  },
+  {
+    "name": "show_in_frontend",
+    "id": "show_in_frontend",
+    "label": "Show React App in frontend",
+    "required": false,
+    "locked": false,
+    "type": "boolean",
+    "display": "toggle",
+    "inline_help_text": "<span style='color:#ff6200; font-weight:600'>If ON, the External React App is loaded in frontend, otherwise is loaded only in page editor. May look weird, but sometimes is needed to load an app only for testing the other apps or other functionality.</span>",
+    "default": true
+  },
+  {
+    "allow_new_line": false,
+    "default": "App-Name",
+    "display_width": null,
+    "id": "external_react_app_name",
+    "label": "React App-Name",
+    "locked": false,
+    "name": "external_react_app_name",
+    "inline_help_text": "The name if the external React app as it is shown in editor",
+    "required": true,
+    "show_emoji_picker": false,
+    "type": "text",
+    "validation_regex": "^[a-zA-Z0-9_-]+$"
+  },
+  {
+    "allow_new_line": false,
+    "default": "Header Title",
+    "display_width": null,
+    "id": "external_react_app_title",
+    "label": "Header title",
+    "locked": false,
+    "name": "external_react_app_title",
+    "inline_help_text": "<p style='background:#e5f5f8;border:solid 1px #7fd1de;margin-top:10px;padding:10px;color:#000;font-weight:600;font-size:13px'>The title shown in the app div header. For better look, restrict the length of the title. Best is to stay in max. 2 rows at the minimum width (600px).</p>",
+    "required": true,
+    "show_emoji_picker": false,
+    "type": "text",
+    "validation_regex": ""
+  },
+  {
+    "allow_new_line": false,
+    "default": "App-Root-Div",
+    "display_width": null,
+    "id": "external_react_app_root_div",
+    "label": "React App Root Div",
+    "locked": false,
+    "name": "external_react_app_root_div",
+    "inline_help_text": "The root div in which the React App is loaded (must be known from the app docs)",
+    "required": true,
+    "show_emoji_picker": false,
+    "type": "text",
+    "validation_regex": "^[a-zA-Z0-9_-]+$"
+  },
+  {
+    "type": "group",
+    "name": "app_triggers",
+    "label": "Triggers",
+    "expanded": false,
+    "inline_help_text": "<p style='background:#e5f5f8;margin-top:10px;color:#ff6200;font-weight:600;font-size:13px'>Triggers to open the app. If app position is default (inline where placed in page), the triggers are ignored. App position shall be Fixed/Floating to use the triggers.</p>",
+    "children": [
+      {
+        "name": "default_icon_trigger",
+        "label": "Default icon trigger",
+        "required": false,
+        "locked": false,
+        "icon_set": "fontawesome-5.14.0",
+        "type": "icon",
+        "inline_help_text": "<p style='background:#e5f5f8;border:solid 1px #7fd1de;margin-top:10px;padding:10px;color:#000;font-weight:600;font-size:13px'>This trigger will be added by default and will be available inside a tools menu for the whole page.</p>",
+        "default": {
+          "name": "Window Maximize",
+          "unicode": "f368",
+          "type": "REGULAR"
+        }
+      },
+      {
+        "name": "default_icon_trigger_color",
+        "label": "Icon fill",
+        "required": false,
+        "locked": false,
+        "type": "color",
+        "default": {
+          "color": "#000",
+          "opacity": 100
+        }
+      },
+      {
+        "name": "default_icon_trigger_hover_color",
+        "label": "Icon hover fill",
+        "required": false,
+        "locked": false,
+        "type": "color",
+        "default": {
+          "color": "#ff6200",
+          "opacity": 100
+        }
+      },
+      {
+        "name": "app_text_trigger",
+        "label": "Keyword",
+        "required": false,
+        "locked": false,
+        "occurrence": {
+          "min": 0,
+          "max": null,
+          "sorting_label_field": null,
+          "default": 0
+        },
+        "allow_new_line": false,
+        "show_emoji_picker": false,
+        "type": "text",
+        "inline_help_text": "<p style='margin-top:10px;padding:10px;color:#ff6200;font-weight:600;font-size:13px'>Keywords/Expressions that will open app when clicked. Add one at the time. SHOULD BE INSIDE A P ELEMENT. Text triggers are CASE SENSITIVE.</p>"
+      },
+      {
+        "name": "app_dom_element_trigger",
+        "label": "Element",
+        "required": false,
+        "locked": false,
+        "occurrence": {
+          "min": 0,
+          "max": null,
+          "sorting_label_field": "app_dom_element_trigger.app_dom_element_trigger_name",
+          "default": 0
+        },
+        "allow_new_line": false,
+        "show_emoji_picker": false,
+        "type": "group",
+        "inline_help_text": "<p style='margin-top:10px;padding:10px;color:#ff6200;font-weight:600;font-size:13px'>CSS selector that will open app when clicked. Use CSS syntax. Any accepted CSS selector can be used. OBSERVE THE HIDE ATTRIBUTE BELOW. Add one at the time.</p>",
+        "children": [
+          {
+            "allow_new_line": false,
+            "display_width": null,
+            "label": "Selector",
+            "inline_help_text": "<p style='background:#e5f5f8;border:solid 1px #7fd1de;margin-top:10px;padding:10px;color:#000;font-weight:600;font-size:13px'>Use regular escaping rules for special characters like h2:contains(\\\"text\\\") when you need very targeted CSS selectors.</p>",
+            "locked": false,
+            "name": "app_dom_element_trigger_name",
+            "required": false,
+            "show_emoji_picker": false,
+            "type": "text",
+            "validation_regex": ""
+          },
+          {
+            "name": "app_dom_element_trigger_type",
+            "label": "Hide for Default/Inline position",
+            "required": false,
+            "locked": false,
+            "type": "boolean",
+            "display": "toggle",
+            "inline_help_text": "<p style='background:#e5f5f8;border:solid 1px #7fd1de;margin-top:10px;padding:10px;color:#000;font-weight:600;font-size:13px'>If ON, the trigger will be hidden for Default/Inline position. This allows to use HTML tags or CSS classes as triggers without hidding them for position Default/Inline.</p>",
+            "default": true
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "group",
+    "name": "external_react_app_helpers",
+    "label": "<span style='color:#ff6200'>IF SOMETHING GOES WRONG</span>",
+    "expanded": false,
+    "children": [
+      {
+        "name": "throw_console_info",
+        "id": "throw_console_info",
+        "label": "More info in console",
+        "required": false,
+        "locked": false,
+        "type": "boolean",
+        "display": "toggle",
+        "inline_help_text": "Provides more information in console if needed. It applies to the module only, it does not prevent contained react app to push info to console.",
+        "default": false
+      },
+      {
+        "name": "throw_frontend_errors",
+        "id": "throw_frontend_errors",
+        "label": "Show errors in frontend",
+        "required": false,
+        "locked": false,
+        "type": "boolean",
+        "display": "toggle",
+        "inline_help_text": "If ON, an error message is shown in frontend when something goes wrong. Otherwise, the space will be blank and (maybe) errors can be seen in console (provided that the external react app throws them).",
+        "default": false
+      }
+    ]
+  },
+  {
+    "type": "group",
+    "name": "app_div_styles",
+    "label": "Styles",
+    "expanded": false,
+    "tab": "STYLE",
+    "children": [
+      {
+        "type": "group",
+        "name": "app_div_styles_spacing",
+        "label": "Spacing",
+        "expanded": false,
+        "tab": "STYLE",
+        "children": [
+          {
+            "name": "app_spacing",
+            "label": "Spacing around the app",
+            "required": false,
+            "type": "spacing",
+            "default": {
+              "padding": {
+                "top": {
+                  "value": 20,
+                  "units": "px"
+                },
+                "bottom": {
+                  "value": 20,
+                  "units": "px"
+                },
+                "left": {
+                  "value": 20,
+                  "units": "px"
+                },
+                "right": {
+                  "value": 20,
+                  "units": "px"
+                }
+              },
+              "margin": {
+                "top": {
+                  "value": 0,
+                  "units": "px"
+                },
+                "bottom": {
+                  "value": 0,
+                  "units": "px"
+                }
+              }
+            }
+          },
+          {
+            "name": "app_extra_spacing",
+            "label": "<span style='color:#ff6200'>Extra spacing around the app</span>",
+            "required": false,
+            "type": "spacing",
+            "inline_help_text": "<p style='background:#e5f5f8;border:solid 1px #7fd1de;margin-top:10px;padding:10px;color:#000;font-weight:600;font-size:13px'>When in FULL WIDTH or FULL HEIGHT or FULL SCREEN you may want an extra spacing around the app.</p>",
+            "default": {
+              "padding": {
+                "top": {
+                  "value": 30,
+                  "units": "px"
+                },
+                "bottom": {
+                  "value": 30,
+                  "units": "px"
+                },
+                "left": {
+                  "value": 30,
+                  "units": "px"
+                },
+                "right": {
+                  "value": 30,
+                  "units": "px"
+                }
+              },
+              "margin": {
+                "top": {
+                  "value": 30,
+                  "units": "px"
+                },
+                "bottom": {
+                  "value": 0,
+                  "units": "px"
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "group",
+        "name": "app_div_styles_border",
+        "label": "Border",
+        "expanded": false,
+        "tab": "STYLE",
+        "inline_help_text": "<p style='background:#e5f5f8;border:solid 1px #7fd1de;margin-top:10px;padding:10px;color:#000;font-weight:600;font-size:13px'>When in FULL WIDTH or FULL HEIGHT or FULL SCREEN the border is added automatically and border settings are ignored</p>",
+        "children": [
+          {
+            "name": "app_border",
+            "label": "Border",
+            "required": false,
+            "locked": false,
+            "allow_custom_border_sides": false,
+            "type": "border",
+            "default": {
+              "top": {
+                "width": {
+                  "value": 0,
+                  "units": "px"
+                },
+                "opacity": 100,
+                "style": "none",
+                "color": "#ffffff"
+              },
+              "bottom": {
+                "width": {
+                  "value": 0,
+                  "units": "px"
+                },
+                "opacity": 100,
+                "style": "none",
+                "color": "#ffffff"
+              },
+              "left": null,
+              "right": null
+            }
+          },
+          {
+            "name": "app_border_radius",
+            "label": "Border radius (px)",
+            "required": false,
+            "locked": false,
+            "min": 0,
+            "step": 1,
+            "type": "number",
+            "prefix": "",
+            "suffix": "",
+            "default": 0,
+            "placeholder": "0"
+          }
+        ]
+      },
+      {
+        "type": "group",
+        "name": "app_div_shadow",
+        "label": "Shadow",
+        "expanded": false,
+        "inline_help_text": "<p style='background:#e5f5f8;border:solid 1px #7fd1de;margin-top:10px;padding:10px;color:#000;font-weight:600;font-size:13px'>When in FULL WIDTH or FULL HEIGHT or FULL SCREEN, shadow settings are ignored.</p>",
+        "tab": "STYLE",
+        "children": [
+          {
+            "name": "app_div_shadow_width",
+            "label": "Width (px)",
+            "required": false,
+            "locked": false,
+            "min": 0,
+            "step": 1,
+            "type": "number",
+            "prefix": "",
+            "suffix": "",
+            "default": 0,
+            "placeholder": "0"
+          },
+          {
+            "name": "app_div_shadow_x",
+            "label": "Offset X (px)",
+            "display_width": "half_width",
+            "required": false,
+            "locked": false,
+            "step": 1,
+            "type": "number",
+            "prefix": "",
+            "suffix": "",
+            "default": 0,
+            "placeholder": "0"
+          },
+          {
+            "name": "app_div_shadow_y",
+            "label": "Offset Y (px)",
+            "display_width": "half_width",
+            "required": false,
+            "locked": false,
+            "step": 1,
+            "type": "number",
+            "prefix": "",
+            "suffix": "",
+            "default": 0,
+            "placeholder": "0"
+          },
+          {
+            "name": "app_div_shadow_color",
+            "label": "Shadow color",
+            "required": false,
+            "locked": false,
+            "type": "color",
+            "default": {
+              "color": "#fafafa",
+              "opacity": 100
+            }
+          }
+        ]
+      },
+      {
+        "type": "group",
+        "name": "app_div_position",
+        "label": "Position and size",
+        "expanded": false,
+        "tab": "STYLE",
+        "inline_help_text": "<p style='background:#e5f5f8;border:solid 1px #7fd1de;margin-top:10px;padding:10px;color:#000;font-weight:600;font-size:13px'>Position=Fixed/Floating => open button will be added on page. Position=Default => offset fields are ignored. On mobile will be always full screen.</p>",
+        "children": [
+          {
+            "name": "app_div_position_type",
+            "label": "App DIV position in page",
+            "required": false,
+            "locked": false,
+            "multiple": false,
+            "display": "select",
+            "choices": [
+              [
+                "div--position--default",
+                "Default/Inline"
+              ],
+              [
+                "div--position--fixed",
+                "Fixed/Floating"
+              ]
+            ],
+            "type": "choice",
+            "default": "div--position--default"
+          },
+          {
+            "name": "app_div_position_offset_top",
+            "label": "Top",
+            "display_width": "half_width",
+            "required": false,
+            "locked": false,
+            "step": 1,
+            "type": "number",
+            "prefix": "",
+            "suffix": "",
+            "default": 0,
+            "placeholder": "0",
+            "visibility": {
+              "controlling_field": "app_div_styles.app_div_position.app_div_position_type",
+              "controlling_value_regex": "div--position--fixed",
+              "operator": "EQUAL"
+            }
+          },
+          {
+            "name": "app_div_position_offset_left",
+            "label": "Left",
+            "display_width": "half_width",
+            "required": false,
+            "locked": false,
+            "step": 1,
+            "type": "number",
+            "prefix": "",
+            "suffix": "",
+            "default": 0,
+            "placeholder": "0",
+            "visibility": {
+              "controlling_field": "app_div_styles.app_div_position.app_div_position_type",
+              "controlling_value_regex": "div--position--fixed",
+              "operator": "EQUAL"
+            }
+          },
+          {
+            "name": "app_div_position_unit",
+            "label": "Offset unit",
+            "required": false,
+            "locked": false,
+            "multiple": false,
+            "display": "select",
+            "choices": [
+              [
+                "px",
+                "px"
+              ],
+              [
+                "em",
+                "em"
+              ],
+              [
+                "rem",
+                "rem"
+              ],
+              [
+                "percentage",
+                "%"
+              ]
+            ],
+            "type": "choice",
+            "default": "px",
+            "visibility": {
+              "controlling_field": "app_div_styles.app_div_position.app_div_position_type",
+              "controlling_value_regex": "div--position--fixed",
+              "operator": "EQUAL"
+            }
+          },
+          {
+            "name": "app_div_position_draggable",
+            "label": "Draggable",
+            "required": false,
+            "locked": false,
+            "type": "boolean",
+            "display": "toggle",
+            "default": false,
+            "inline_help_text": "<p style='background:#e5f5f8;border:solid 1px #7fd1de;margin-top:10px;padding:10px;color:#000;font-weight:600;font-size:13px'>If size is full height or full width or full screen, draggable will be FALSE. On mobile is always FALSE.</p>",
+            "visibility": {
+              "controlling_field": "app_div_styles.app_div_position.app_div_position_type",
+              "controlling_value_regex": "div--position--fixed",
+              "operator": "EQUAL"
+            }
+          },
+          {
+            "name": "app_div_position_size",
+            "label": "Size",
+            "required": false,
+            "locked": false,
+            "multiple": false,
+            "display": "select",
+            "choices": [
+              [
+                "div--position--size--default",
+                "Default"
+              ],
+              [
+                "div--position--size--full--width",
+                "Full width/Default height"
+              ],
+              [
+                "div--position--size--full--height",
+                "Full height/Default width"
+              ],
+              [
+                "div--position--size--full--screen",
+                "Full screen"
+              ]
+            ],
+            "type": "choice",
+            "default": "div--position--size--default",
+            "visibility": {
+              "controlling_field": "app_div_styles.app_div_position.app_div_position_type",
+              "controlling_value_regex": "div--position--fixed",
+              "operator": "EQUAL"
+            }
+          },
+          {
+            "name": "app_div_position_enter_from_left",
+            "label": "Enter from left",
+            "required": false,
+            "locked": false,
+            "type": "boolean",
+            "display": "toggle",
+            "default": true,
+            "inline_help_text": "<p style='width:100%; background:#e5f5f8;border:solid 1px #7fd1de;margin-top:10px;padding:10px;color:#000;font-weight:600;font-size:13px'>If false, the entrance will be from right side of page.</p>",
+            "visibility": {
+              "controlling_field": "app_div_styles.app_div_position.app_div_position_size",
+              "controlling_value_regex": "div--position--size--full--height",
+              "operator": "EQUAL"
+            }
+          },
+          {
+            "name": "app_div_position_enter_from_top",
+            "label": "Enter from top",
+            "required": false,
+            "locked": false,
+            "type": "boolean",
+            "display": "toggle",
+            "default": true,
+            "inline_help_text": "<p style='width:100%; background:#e5f5f8;border:solid 1px #7fd1de;margin-top:10px;padding:10px;color:#000;font-weight:600;font-size:13px'>If false, the entrance will be from bottom side of page.</p>",
+            "visibility": {
+              "controlling_field": "app_div_styles.app_div_position.app_div_position_size",
+              "controlling_value_regex": "div--position--size--full--width",
+              "operator": "EQUAL"
+            }
+          }
+        ]
+      },
+      {
+        "type": "group",
+        "name": "app_div_colors",
+        "label": "Colors",
+        "expanded": false,
+        "tab": "STYLE",
+        "children": [
+          {
+            "name": "app_div_background_color",
+            "label": "Background color",
+            "required": false,
+            "locked": false,
+            "type": "color",
+            "default": {
+              "color": "#ffffff",
+              "opacity": 100
+            }
+          },
+          {
+            "name": "app_div_header_background_color",
+            "label": "Header background color",
+            "required": false,
+            "locked": false,
+            "type": "color",
+            "default": {
+              "color": "#eaeaea",
+              "opacity": 100
+            }
+          },
+          {
+            "name": "app_div_header_title_color",
+            "label": "Title color",
+            "required": false,
+            "locked": false,
+            "type": "color",
+            "default": {
+              "color": "#000",
+              "opacity": 100
+            }
+          },
+          {
+            "name": "app_div_close_btn_color",
+            "label": "Close button fill",
+            "required": false,
+            "locked": false,
+            "type": "color",
+            "default": {
+              "color": "#FF0201",
+              "opacity": 100
+            }
+          },
+          {
+            "name": "app_div_close_btn_hover_color",
+            "label": "Close button hover fill",
+            "required": false,
+            "locked": false,
+            "type": "color",
+            "default": {
+              "color": "#FF0201",
+              "opacity": 100
+            }
+          },
+          {
+            "name": "app_div_maximise_btn_color",
+            "label": "Maximise button fill",
+            "required": false,
+            "locked": false,
+            "type": "color",
+            "default": {
+              "color": "#7ed957",
+              "opacity": 100
+            }
+          },
+          {
+            "name": "app_div_maximise_btn_hover_color",
+            "label": "Maximise button hover fill",
+            "required": false,
+            "locked": false,
+            "type": "color",
+            "default": {
+              "color": "#7ed957",
+              "opacity": 100
+            }
+          },
+          {
+            "name": "app_div_restore_defaults_btn_color",
+            "label": "Restore default position/size button fill",
+            "required": false,
+            "locked": false,
+            "type": "color",
+            "default": {
+              "color": "#f5df4d",
+              "opacity": 100
+            }
+          },
+          {
+            "name": "app_div_restore_defaults_btn_hover_color",
+            "label": "Restore default position/size button fill",
+            "required": false,
+            "locked": false,
+            "type": "color",
+            "default": {
+              "color": "#f5df4d",
+              "opacity": 100
+            }
+          },
+          {
+            "name": "app_div_restore_last_saved_btn_color",
+            "label": "Restore default position/size button fill",
+            "required": false,
+            "locked": false,
+            "type": "color",
+            "default": {
+              "color": "#ff6200",
+              "opacity": 100
+            }
+          },
+          {
+            "name": "app_div_restore_last_saved_btn_hover_color",
+            "label": "Restore default position/size button fill",
+            "required": false,
+            "locked": false,
+            "type": "color",
+            "default": {
+              "color": "#ff6200",
+              "opacity": 100
+            }
+          }
+        ]
+      }
+    ]
+  }
+]

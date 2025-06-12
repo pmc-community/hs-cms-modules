@@ -1,0 +1,147 @@
+button {
+    margin: 3px !important
+}
+
+.ihs-external-react-app-info {
+    padding: 20px;
+    border-radius: 5px;
+    background: #fafafa;
+    margin-bottom: 20px;
+}
+
+.ihs-external-react-app-info-text {
+    font-size: 12px;
+    margin-bottom: 0;
+    font-weight: 500;
+}
+
+.ihs-external-react-app-info-text-frontend {
+    color: blueviolet;
+}
+
+.ihs-external-react-app-info-label {
+    color: blueviolet;
+    font-weight: 600;
+}
+
+.ihs-external-react-app-info-content {
+    color: black;
+}
+
+.ihs-external-react-app-info-message {
+    background: black;
+    color: white;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding: 10px;
+}
+
+.ihs-external-react-app-info-message:hover {
+    background: blueviolet;
+}
+
+.ihs-external-react-app-toggle-visible-edit-mode {
+    margin-right: 5px;
+}
+
+.ihs_era_container_header_button {
+    cursor: pointer;
+    height: fit-content;
+    width: fit-content;
+    margin-left: 3px;
+    margin-right: 3px;
+
+}
+
+.ihs_era_container_close_btn_container .hs_cos_wrapper_type_icon svg:hover {
+    transform: scale(1.2);
+}
+
+
+.ihs_era_container_close_btn_container {
+    top: 0;
+    float: right !important;
+    text-align: right !important;
+    padding-right: 20px;
+    padding-top: 5px;
+    width: auto !important;
+    display: flex !important;
+}
+
+@media only screen and (max-width: 768px) {
+
+    .ihs_era_container_set_defaults_btn,
+    .ihs_era_container_maximise_btn,
+    .ihs_era_container_set_last_saved_btn {
+        display: none;
+    }
+
+    .ihs_era_container_close_btn {
+        position: fixed;
+        top: 25px;
+        right: 20px;
+    }
+
+}
+
+.ihs_era_container {
+    display: flex;
+    overflow: auto;
+}
+
+.ihs_era_container_header_title {
+    font-weight: 600;
+    font-size: 18px;
+    width: 60% !important
+}
+
+.ihs_era_container_header {
+    border-bottom: solid 1px #eaeaea;
+    position: absolute;
+}
+
+/* replace the ugly resize icon from jQueryUI 
+ * and hide it on mobile because is useless
+*/
+.ui-icon-gripsmall-diagonal-se {
+    background-position: 0px -0px !important;
+    background-repeat: no-repeat !important;
+    background-size: contain !important;
+    border-radius: 3px !important;
+}
+
+.ui-icon,
+.ui-widget-content .ui-icon {
+    background-image: url(https://hub.innohub.space/hubfs/hub-ihs/resize.png) !important;
+}
+
+.ui-icon:hover,
+.ui-widget-content .ui-icon:hover {
+    background-image: url(https://hub.innohub.space/hubfs/hub-ihs/resize-hover.png) !important;
+}
+
+.ui-icon {
+    width: 24px !important;
+    height: 24px !important;
+}
+
+/* keep the resize icon steady and not let it move up and down when scrolling 
+ * also align it with the close button, hence -33px left margin
+*/
+.ui-resizable-se {
+    position: sticky !important;
+    top: calc(100% - 20px) !important;
+    margin-left: -33px !important;
+    float: right !important
+}
+
+.ihs_era_text_trigger {
+    background: #f8ec893f;
+    cursor: pointer;
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-top: 1px;
+    padding-bottom: 1px;
+    border: dotted 1px #eaeaea;
+    border-radius: 4px;
+}

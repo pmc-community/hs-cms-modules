@@ -1,0 +1,9 @@
+#!/bin/bash
+#hs remove ihs-assets
+hs upload ihs-assets ihs-assets
+#hs remove ihs-macros
+hs upload ihs-macros ihs-macros
+#hs remove ihs-settings
+hs upload ihs-settings ihs-settings
+#hs remove ihs-auth0
+hs upload ihs-auth0 ihs-auth0

@@ -1,0 +1,21 @@
+name: Create REDUX Info Files
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  create-redux-info:
+    runs-on: ubuntu-latest
+    container: node:16
+    steps:
+      - run: node --version
+      - run: npm --version
+      - uses: actions/checkout@v3
+      - run: npm install
+      - run: node gen-redux-info.js
+      - name: Commit new redux info file
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: Apply changes to redux info files
+          branch: main
+          

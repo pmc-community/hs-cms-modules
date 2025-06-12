@@ -1,0 +1,168 @@
+{# pre-connects the domains used to load external assets #}
+{% macro preconnect() %}
+    {# preconnect the domains used to load jQuery #}
+    <link rel="preconnect"  href="https://cdnjs.cloudflare.com" >
+    <link rel="preconnect"  href="https://code.jquery.com" >
+{% endmacro %}
+
+{# embed the latest jQuery version #}
+{% macro load_jquery_latest()  %}
+    {# jQuery #}
+    {% import "/ihs-settings/site-settings.html" as siteSet %}
+    {% set jq = "https://cdnjs.cloudflare.com/ajax/libs/jquery/" ~ siteSet.siteSettings.jQuery.jQueryVersion ~ "/jquery.min.js" %}
+    {{require_js(jq, { position: "head", defer:false })}}
+    
+    {# jQuery migrate - NOT USED AS OF 02-Nov-2022 #}
+    {# % set jqm = "https://cdnjs.cloudflare.com/ajax/libs/jquery-migrate/" ~ siteSet.siteSettings.jQuery.jQueryMigrateVersion ~ "/jquery-migrate.min.js" % #}
+    {# jQuery Migrate can be loaded async, deferred and in footer #}
+    {#{require_js(jqm, { position: "footer", defer:true, async:true })}#}
+
+{% endmacro %}
+
+{# loading lodash #}
+{% macro load_lodash() %}
+    {% import "/ihs-settings/site-settings.html" as siteSet %}
+    {% set lodash = siteSet.siteSettings.lodash.location ~ "lodash@" ~ siteSet.siteSettings.lodash.version ~ "/lodash.min.js"  %}
+    {{require_js(lodash, { position: "head", defer:false })}}
+{% endmacro %}
+
+{# embed dragable/resizable/sectable/droppable/sortable jQuery library #}
+{% macro load_jquery_tools() %}
+    {% import "/ihs-settings/site-settings.html" as siteSet %}
+    {% set jqui_js = "https://code.jquery.com/ui/" ~ siteSet.siteSettings.jQuery.jQueryUIVersion ~ "/jquery-ui.js" %}
+    {% set jqui_css = "https://code.jquery.com/ui/" ~ siteSet.siteSettings.jQuery.jQueryUIVersion ~ "/themes/base/jquery-ui.css" %}
+    
+    {# async shoud be false, otherwise jquery-ui may not be available (mostly in Firefox) #}
+    {{require_js(jqui_js, { position: "head", async:false })}}
+
+    {# css can always be deferred, async and loaded in footer #}
+    {{require_css(jqui_css, { position: "footer", async:true, defer:true })}} 
+{% endmacro %}
+
+{# NOT USED AS OF 27 SEPT 2022 #}
+{# to be used for integrating some ready-made components #}
+{# need REACT to be also loaded #}
+{% macro load_prime_ui() %}
+    {% import "/ihs-settings/site-settings.html" as siteSet %}
+
+    {{require_css("https://unpkg.com/primeicons/primeicons.css", { position: "head" })}}
+    {{require_css("https://unpkg.com/primereact/resources/primereact.min.css", { position: "head" })}}
+    {{require_css("https://unpkg.com/primeflex@3.2.1/primeflex.min.css", { position: "head" })}} 
+
+    {{require_js("https://unpkg.com/react/umd/react.production.min.js", { position: "head" })}}
+    {{require_js("https://unpkg.com/react-dom/umd/react-dom.production.min.js", { position: "head" })}}
+    {{require_js("https://unpkg.com/@babel/standalone/babel.min.js", { position: "head" })}}
+    {{require_js("https://unpkg.com/react-transition-group@4.4.2/dist/react-transition-group.js", { position: "head" })}}
+
+    {{require_js("https://unpkg.com/primereact/core/core.min.js", { position: "head" })}}
+    {{require_js("https://unpkg.com/primereact/terminal/terminal.min.js", { position: "head" })}}
+
+{% endmacro %}
+
+{# loads site global js assets form local source (/ihs-assets/js/global/) or from npm package #}
+{# loads site global css assets form local source (/ihs-assets/css/) #}
+{% macro load_global_assets()  %}
+
+    {# load global style #} 
+    {{ require_css(get_asset_url("/ihs-assets/css/ihs-main.css"), { position: "footer", async:true, defer:true }) }}
+
+    {# load global scripts #} 
+    {# first, init the super globals#}
+    {% import "/ihs-settings/site-settings.html" as siteSet %}
+
+    {% set headerSelector = siteSet.siteSettings.dynamicPageHeader.headerSelector %}
+    {% set mainSelector = siteSet.siteSettings.dynamicPageHeader.mainSelector %}
+    
+    {% require_js position="footer" %}
+        <script>
+            class SuperGlobals {
+                constructor() {
+                    APP_NAME = '{{siteSet.siteSettings.APP_NAME}}';
+                    REQUEST_REDUX_STORE = '{{siteSet.siteSettings.REQUEST_REDUX_STORE}}';
+                    REDUX_SYNC_CHANNEL = '{{siteSet.siteSettings.REDUX_SYNC_CHANNEL}}';
+                    REDUX_STORE_BROADCAST = '{{siteSet.siteSettings.REDUX_STORE_BROADCAST}}';
+                    REDUX_STATE_CHANGED = '{{siteSet.siteSettings.REDUX_STATE_CHANGED}}'
+                    IHSStateChannel = new BroadcastChannel(REDUX_SYNC_CHANNEL);
+                    dynamicHeaderHSelector = $('header').length > 0 ? 'header' : '{{headerSelector}}';
+                    dynamicHeaderMSelector = $('main').length > 0 ? 'main' : '{{mainSelector}}';
+                    IHS_AUTH0_EVENT = '{{siteSet.siteSettings.auth0.IHS_AUTH0_EVENT}}';
+                }
+            }
+        </script>
+    {% end_require_js %}
+
+    {# now, loading scripts #}
+    {% set scripts = siteSet.siteSettings.globalScripts.scripts %}
+    {% if scripts|length > 0 %}
+        {% if siteSet.siteSettings.globalScripts.loadLocal %}
+            {% for script in scripts %}
+                {% set fullScript = "/ihs-assets/js/global/" ~ script %}
+
+                {# async shoud be false, otherwise superglobals may not be available (mostly in Firefox) #}
+                {{ require_js(get_asset_url(fullScript), { position: "footer", async: false, defer:true }) }}
+            {% endfor %} 
+        {% else %}
+            {% set packageName = siteSet.siteSettings.globalScripts.packageName %}
+            {% set packageVersion = siteSet.siteSettings.globalScripts.packageVersion %}
+            {% set packageCDN =  siteSet.siteSettings.globalScripts.jsCDN %}
+            {% set packageURL =  'https://' ~ packageCDN ~ '/' ~ packageName ~ '@' ~ packageVersion ~ '/' %}
+
+            {% for script in scripts %}
+                {% set fullScript = packageURL ~ script %}
+                
+                {# async shoud be false, otherwise superglobals may not be available (mostly in Firefox) #}
+                {{ require_js(fullScript, { position: "footer", async: false, defer:true }) }} 
+            {% endfor %}
+        {% endif %}
+    {% endif %}
+    
+{% endmacro %}
+
+{# loads site global js assets form local source (/ihs-assets/js/specific/) #}
+{% macro load_global_specific_assets() %}
+    {{ require_js(get_asset_url("/ihs-assets/js/specific/ihs-main-specific.js"), { position: "footer", async: true, defer:true }) }}
+{% endmacro %}
+
+{# create the environment info object that will be further used and also passed to the browser #}
+{% macro init_env_after_load() %}
+
+    {% import "/ihs-macros/init-env.html" as env %}
+    {% require_js position="footer" %}
+        <script>
+            $(window).on('load', function() { ihs_site_main('{{ env.envInfo|tojson }}'); });
+        </script>
+    {% end_require_js %}
+
+{% endmacro %}
+
+{# load the assets. this must be called from a global content module/template. the recommended one is the page footer #}
+{% macro load_all_global_assets() %}
+    
+    {{ preconnect() }}
+    {{ load_jquery_latest() }}
+    {{ load_lodash() }}
+    {{ load_jquery_tools() }}
+    {{ load_global_assets() }}
+    {{ load_global_specific_assets() }}
+    {{ init_env_after_load() }}
+
+    {# loading page elements #}
+    {% import "./page-elements.html" as pageElements %}
+
+    {# no need to import the site settings since env.envInfo contains already the settings as env.envInfo.siteSettings #}
+    {% import "/ihs-macros/init-env.html" as env %}
+    
+    {{ pageElements.legal_widget(env.envInfo) }}
+    {{ pageElements.load_status_page(env.envInfo) }}
+    {{ pageElements.go_to_top_btn(env.envInfo) }}
+    {{ pageElements.site_settings_info(env.envInfo) }}
+
+    {{ pageElements.clean_after_load(env.envInfo) }}
+
+    {# configure Auth0 #}
+    {% import "/ihs-auth0/ihs-auth0.html" as auth %}
+    {{ auth.load_auth0_sdk(env.envInfo) }}
+    {{ auth.init_auth0(env.envInfo) }}
+    {{ auth.load_ihs_auth0(env.envInfo) }}
+    
+{% endmacro %}
