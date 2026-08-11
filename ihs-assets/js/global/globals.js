@@ -12,23 +12,98 @@ let dynamicHeaderHSelector, dynamicHeaderMSelector;
 
 // used for Auth0
 let IHS_AUTH0_EVENT;
+
+const mess = {
+    "1": {
+        "type": "success",
+        "hasConsole": true,
+        "consoleMessage": "IHS HubSpot Frontend connected to the store",
+        "hasSnack": true,
+        "snackMessage": "IHS HubSpot Frontend  connected to the store",
+        "hasDoc": false,
+        "docLink": "",
+        "supportLink": ""
+    },
+    "2": {
+        "type": "error",
+        "hasConsole": true,
+        "consoleMessage": "Cannot connect app to the store",
+        "hasSnack": true,
+        "snackMessage": "Cannot connect app to the store",
+        "hasDoc": true,
+        "docLink": "https://docaroo.innohub.space",
+        "supportLink": "https://innohub.space/eng/mypmc/technical-support/"
+    },
+    "3": {
+        "type": "info",
+        "hasConsole": true,
+        "consoleMessage": "Injecting async reducers",
+        "hasSnack": false,
+        "snackMessage": "",
+        "hasDoc": false,
+        "docLink": "",
+        "supportLink": ""
+    },
+    "4": {
+        "type": "info",
+        "hasConsole": true,
+        "consoleMessage": "Message from IHS HubSpot Frontend ",
+        "hasSnack": true,
+        "snackMessage": "Message from IHS HubSpot Frontend ",
+        "hasDoc": false,
+        "docLink": "",
+        "supportLink": ""
+    }
+}
+
 // ----- END SUPERGLOBLAS
 
 // THIS GUY IS DOING THE HARD WORK
 // gets the redux store and injects own reducers (if available)
-// the event listener is set in main.js
+// the event listener is set by requestBackendStore() in the dispatcher script
 // the store (as object) and utilities are provided by the REDUX Store app
 // the reducers info and all their actions are provided by this app/site
-const _listener = (e) => {
-    if (e.detail.who === APP_NAME) {
-        IHSBEStore = e.detail.content;
-        IHSUtilities = e.detail.utilities;
-        if (IHSBEStore) {
-            IHSUtilities.broadcastMessage(1, APP_NAME);
-            new FrontEndReducers(IHSBEStore, IHSUtilities, FEReducersInfo, FEAllActions);
-            document.removeEventListener(REDUX_STORE_BROADCAST, _listener);
-        }
-        else console.log("IHS Hubspot frontend is not connected to store");
+//
+// IMPORTANT: the store app can reply with a non-object sentinel (e.g. the string
+// 'exiting') if it is mid-unmount/remount when the request arrives. IHSBEStore
+// must NEVER be assigned unless the reply is confirmed to be a real store object,
+// otherwise downstream code (IHSCSitePage, updatePageSettingsInReduxStore, etc.)
+// will throw when calling store methods on a string.
+const _listener = (e, replyEvent, attempt) => {
+    if (e.detail.who !== APP_NAME) return;
+
+    const content = e.detail.content;
+    const utilities = e.detail.utilities;
+
+    if (content && typeof content === 'object') {
+        // real store handoff — safe to assign to globals
+        IHSBEStore = content;
+        IHSUtilities = utilities;
+        const action = {
+            type: 'IHS_CONNECTED_APP',
+            payload: {
+                name: APP_NAME,
+                type: 'frontend',
+                components: [],
+                workers: []
+            }
+        };
+
+        IHSBEStore.dispatch(action);
+        IHSUtilities.broadcastMessage(0, APP_NAME, '', mess['1']);
+
+        new FrontEndReducers(IHSBEStore, IHSUtilities, FEReducersInfo, FEAllActions);
+        // listener was registered with { once: true }, so no manual removeEventListener needed
+        return;
+    }
+
+    // non-store reply (e.g. 'exiting') — do NOT touch IHSBEStore/IHSUtilities
+    console.log(`IHS Hubspot frontend is not connected to store (reply: "${content}", attempt ${attempt})`);
+
+    if (attempt < MAX_STORE_REQUEST_ATTEMPTS) {
+        setTimeout(() => requestBackendStore(attempt + 1), STORE_REQUEST_RETRY_MS * attempt);
+    } else {
+        console.log('IHS Hubspot frontend could not connect to store after max attempts');
     }
 }
 
@@ -140,7 +215,10 @@ class IHSCSitePage {
         let envString = JSON.stringify(envTemp);
 
         this.specificPageSettings = typeof this.reduxConnected !== 'undefined' && this.reduxConnected
-            ? new Function(`return new (new IHSBEStore.storeUtilities.ReduxConnectedClass(${this.initialEnvInfo.siteSettings.specificPageClass}))('${envString}')`)
+            ? new Function(`return new (new IHSBEStore.storeUtilities.connectClassToRedux(
+                ${this.initialEnvInfo.siteSettings.specificPageClass},
+                IHSBEStore
+            ))('${envString}')`)
             : new Function(`return new ${this.initialEnvInfo.siteSettings.specificPageClass}('${envString}')`);
 
         if (typeof this.specificPageSettings === 'function') new this.specificPageSettings;
@@ -165,11 +243,12 @@ class IHSCSitePage {
         }
 
         if (this.reduxConnected) {
-            this.store.storeUtilities.setObserveStore();
+            //this.store.storeUtilities.setObserveStore();
             this.setHandleStateChange(this.initialEnvInfo, this.initialEnvInfo.siteSettings, config.stateChangeProcessor, this);
         }
 
         if (this.reduxConnected) this.updatePageSettingsInReduxStore(envTemp);
+
     }
 
     setHandleStateChange(ei, site, processor, parent) {
@@ -189,7 +268,12 @@ class IHSCSitePage {
     }
 
     updatePageSettingsInReduxStore(ei) {
-        if (this.reduxConnected) this.ihsHSActions.updatePageSettings(ei)(this.store.dispatch);
+        const action = {
+            type: 'IHS_HS_UPDATE_PAGE_SETTINGS',
+            payload: ei
+        }
+        IHSBEStore.dispatch(action);
+        //if (this.reduxConnected) this.ihsHSActions.updatePageSettings(ei)(this.store.dispatch);
     }
 
     setGoToTopBtn(ei) {

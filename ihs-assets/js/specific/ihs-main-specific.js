@@ -18,7 +18,7 @@ function ihsSiteMain_doStuff(envInfo) {
     // may look weird but the logic is that the specific script knows what should be done with this specific environment 
     // and uses both general and specific objects do the job
     if (typeof IHSBEStore !== 'undefined ')
-        page = new (new IHSBEStore.storeUtilities.ReduxConnectedClass(IHSCSitePage))(
+        page = new ( IHSBEStore.storeUtilities.connectClassToRedux(IHSCSitePage, IHSBEStore))(
             JSON.parse(eI),
             {
                 stateChangeProcessor: IHSCSpecificHSSitePage.processStateChange,
@@ -111,6 +111,8 @@ class IHSCSpecificHSSitePage {
         if (this.siteSettings.openFooterLinksInNewTab) this.openFooterLinksInNewTab();
         if (this.siteSettings.openSocialLinksInNewTab) this.openSocialLinksInNewTab();
         if (this.envInfo.editMode) this.setSearchInSettings();
+
+        console.log(this)
     }
 
     // using the parent class (IHSCSitePage) as parameter to this method
@@ -122,7 +124,13 @@ class IHSCSpecificHSSitePage {
     }
 
     static handleAuthEvent(e, ei, site, parent) {
-        parent.ihsHSActions.updateUserStatus(e.detail.auth0data)(parent.store.dispatch);
+        //parent.ihsHSActions.updateUserStatus(e.detail.auth0data)(parent.store.dispatch);
+        const action = {
+            type: 'IHS_HS_UPDATE_USER_STATUS',
+            payload: e.detail.auth0data
+        }
+        IHSBEStore.dispatch(action);
+
     }
 
     setSearchInSettings() {

@@ -21,7 +21,7 @@ function authSetCheckSession(ei) {
     const needLogin = (err, ei) => {
         let authLinks = (ei.siteSettings.auth0.authLinks.selector).join(',');
         $(authLinks).text(`${ei.siteSettings.auth0.loginLinkText}`);
-        $(authLinks).parent().prepend(`<a style="margin-right:20px" href = "${ei.siteSettings.auth0.registrationLink}" target="_blank">${ei.siteSettings.auth0.registrationLinkText}</a>`);
+        //$(authLinks).parent().prepend(`<a style="margin-right:20px" href = "${ei.siteSettings.auth0.registrationLink}" target="_blank">${ei.siteSettings.auth0.registrationLinkText}</a>`);
         $(authLinks).attr('ihs_auth', 'ihs-login');
         document.dispatchEvent(new CustomEvent(IHS_AUTH0_EVENT, { detail: { auth0data: { status: false, data: err } } }));
     }

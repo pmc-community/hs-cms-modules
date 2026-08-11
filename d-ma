@@ -1,9 +1,11 @@
 #!/bin/bash
 #hs remove ihs-assets
-hs upload ihs-assets ihs-assets
+hs cms upload ihs-assets ihs-assets
 #hs remove ihs-macros
-hs upload ihs-macros ihs-macros
+hs cms upload ihs-macros ihs-macros
 #hs remove ihs-settings
-hs upload ihs-settings ihs-settings
+hs cms upload ihs-settings ihs-settings
 #hs remove ihs-auth0
-hs upload ihs-auth0 ihs-auth0
+hs cms upload ihs-auth0 ihs-auth0
+
+hs cms upload ihs-res ihs-res

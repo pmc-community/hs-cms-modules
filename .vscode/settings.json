@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "_headers": "plaintext",
+        "*.html": "html-hubl",
+        "*.css": "css-hubl"
+    }
+}

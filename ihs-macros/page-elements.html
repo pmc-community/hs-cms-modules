@@ -12,7 +12,7 @@
             <script id = "ihs-clean-after-load-script">
                 $(document).ready( () => {
                     setTimeout( () => {
-                        $('{{elementsSelector}}').remove();
+                        $({{elementsSelector|tojson}}).remove();
                     }, 2000);
                 });         
             </script>
@@ -35,10 +35,14 @@
         {{ require_js("https://unpkg.com/@webcomponents/webcomponentsjs@" ~ siteSet.siteSettings.statusPageWidget.version ~ "/webcomponents-bundle.js", { position: "footer", async:true, defer:true }) }} 
         {{ require_js("https://unpkg.com/@statuspage/status-widget/dist/index.js", { position: "footer", async:true, defer:true }) }}
 
+        {% set statusPageWidgetMarkup =
+            '<statuspage-widget style="vertical-align: middle !important; height: 1em !important;" src="' ~ siteSet.siteSettings.statusPageWidget.location ~ '" appearance="' ~ siteSet.siteSettings.statusPageWidget.showAs ~ '"></statuspage-widget>'
+        %}
+
         {% require_js position="footer" %}
             <script id = "ihs-status-page-script">
                 $(window).on("load", function() {
-                    $('{{siteSet.siteSettings.statusPageWidget.whereToAppend}}').append('<statuspage-widget style="vertical-align: middle !important; height: 1em !important;" src="{{siteSet.siteSettings.statusPageWidget.location}}" appearance="{{siteSet.siteSettings.statusPageWidget.showAs}}"></statuspage-widget>');
+                    $({{siteSet.siteSettings.statusPageWidget.whereToAppend|tojson}}).append({{statusPageWidgetMarkup|tojson}});
                 });         
             </script>
         {% end_require_js %}
@@ -84,15 +88,15 @@
         '<div class="row-fluid-wrapper">
             <div id = "ihs_auth0_info_edit_mode" class="ihs_auth0_info_edit_mode row-fluid">
                 Authentication with Auth0 is active but cannot be used in edit mode. Check the pre-requisites in frontend and test it (see Site settings).
-            </div
+            </div>
         </div>' 
     %}
 
-    {% set auth0Info = auth0Info|replace("\n","") %}
+    {# NOTE: no manual \n stripping needed anymore - tojson handles escaping safely #}
 
     {% require_js position="footer" %}
         <script>
-            $(window).on('load', () => { $('main').prepend('{{auth0Info}}'); });
+            $(window).on('load', () => { $('main').prepend({{auth0Info|tojson}}); });
         </script>
     {% end_require_js %}
 
@@ -330,7 +334,7 @@
         %}
 
         {% set siteInfo = siteInfo|replace("**marker_to_be_replaced**", siteInfoBox) %}
-        {% set siteInfo = siteInfo|replace("\n","") %}
+        {# NOTE: no manual \n stripping needed anymore - tojson handles escaping safely #}
         
         {# site info area must be loaded in footer because the main element must be on page when loading site info #}
         {% require_js position="footer" %}
@@ -338,7 +342,7 @@
 
             let minSiteInfoEditModeContainerHeight = 300; 
             $(window).on('load', () => {
-                $('main').prepend('{{siteInfo}}');
+                $('main').prepend({{siteInfo|tojson}});
                 const selector = [
                     '.ihs_site_info_edit_mode_message',
                     '.ihs_site_info_edit_mode_title_row',
@@ -527,93 +531,52 @@
 
 {# load legal widget #}
 {% macro legal_widget(ei) %}
-    
+
     {% if ei.siteSettings.legalWidget.active %}
         {% set hasTerms = ei.siteSettings.legalWidget.terms.active %}
         {% set hasPrivacy = ei.siteSettings.legalWidget.privacy.active %}
         {% set hasCookies = ei.siteSettings.legalWidget.cookies.active %}
         {% set hasHSCookieSettings = ei.siteSettings.legalWidget.cookies.hsCookieSettings %}
-        
+
         {% set whereTo = ei.siteSettings.legalWidget.whereTo %}
 
-        {% set termsText = '' %}
-        {% set termsLink = '' %}
-
-        {% set privacyText = '' %}
-        {% set privacyLink = '' %}
-
-        {% set cookiesText = '' %}
-        {% set cookiesLink = '' %}
-
-        
-        {% if hasTerms %}
-            {% set termsText = ei.siteSettings.legalWidget.terms.text %}
-            {% set termsLink = ei.siteSettings.legalWidget.terms.link %}
-        {% endif %}
-
-        {% if hasPrivacy %}
-            {% set privacyText = ei.siteSettings.legalWidget.privacy.text %}
-            {% set privacyLink = ei.siteSettings.legalWidget.privacy.link %}
-        {% endif %}
-
-        {% if hasCookies %}
-            {% set cookiesText = ei.siteSettings.legalWidget.cookies.text %}
-            {% set cookiesLink = ei.siteSettings.legalWidget.cookies.link %}
-        {% endif %}
-
-        {% set terms = '' %}
-        {% set privacy = '' %}
-        {% set cookies = '' %}
-        
-        {% set linkSeparator = '<span class = "ihs_legal_widget_link_separator"> | </span>' %}
-
-        {% if hasTerms %}
-            {% set terms = '<a class = "ihs_legal_widget_link" href = "{{termsLink}}" target="_blank">{{termsText}}</a>' ~ linkSeparator %}
-        {% endif %}
-
-        {% if hasPrivacy %}
-            {% set privacy = '<a class = "ihs_legal_widget_link" href = "{{privacyLink}}" target="_blank">{{privacyText}}</a>' ~ linkSeparator %}
-        {% endif %}
-
-        {% if hasCookies %}
-            {% set cookies = '<a class = "ihs_legal_widget_link" href = "{{cookiesLink}}" target="_blank">{{cookiesText}}</a>' %}
-        {% endif %}
-
-        {% set cookieSettingsBtn = '' %}
-        {% if hasHSCookieSettings %}
-            {% set cookieSettingsBtn =
-                '<div class = "ihs-legal-widget-cookie-settings-btn-container">
-                    <button type="button" id="hs_show_banner_button" class = "ihs-legal-widget-cookie-settings-btn">
-                        Cookie Settings
-                    </button>
-                </div>'
-            %}
-        {% endif %}
-
-        {% set legalLinks  = terms ~ privacy ~ cookies ~ cookieSettingsBtn %}
-        {% set legalLinks = legalLinks|replace("\n","") %}
-        
-        {% set legalWidget = 
-            '<div class="row-fluid-wrapper">
-                <div id = "ihs_legal_widget" class="ihs_legal_widget">
-                    {{legalLinks}}
-                </div
-            </div>' 
-        %}
-
-        {% set legalWidget = legalWidget|replace("\n","") %}
+        {# render the widget directly into the page, hidden - no string building, no JS injection #}
+        <div id="ihs_legal_widget_wrapper" style="display:none;">
+            <div class="row-fluid-wrapper">
+                <div id="ihs_legal_widget" class="ihs_legal_widget">
+                    {% if hasTerms %}
+                        <a class="ihs_legal_widget_link" href="{{ ei.siteSettings.legalWidget.terms.link }}" target="_blank">{{ ei.siteSettings.legalWidget.terms.text }}</a><span class="ihs_legal_widget_link_separator"> | </span>
+                    {% endif %}
+                    {% if hasPrivacy %}
+                        <a class="ihs_legal_widget_link" href="{{ ei.siteSettings.legalWidget.privacy.link }}" target="_blank">{{ ei.siteSettings.legalWidget.privacy.text }}</a><span class="ihs_legal_widget_link_separator"> | </span>
+                    {% endif %}
+                    {% if hasCookies %}
+                        <a class="ihs_legal_widget_link" href="{{ ei.siteSettings.legalWidget.cookies.link }}" target="_blank">{{ ei.siteSettings.legalWidget.cookies.text }}</a>
+                    {% endif %}
+                    {% if hasHSCookieSettings %}
+                        <div class="ihs-legal-widget-cookie-settings-btn-container">
+                            <button type="button" id="hs_show_banner_button" class="ihs-legal-widget-cookie-settings-btn">
+                                Cookie Settings
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
 
         {% require_js position="footer" %}
             <script id="ihs-legal-widget-script">
                 $(window).on('load', () => {
-                    $('{{whereTo}}').append('{{legalWidget}}');
+                    $('#ihs_legal_widget_wrapper').children().appendTo({{whereTo|tojson}});
+                    $('#ihs_legal_widget_wrapper').remove();
+
                     $('#hs_show_banner_button').click( () => {
                         var _hsp = window._hsp = window._hsp || [];
                         _hsp.push(["showBanner"]);
 
                         IHSCSpecificHSSitePage.applyHSCookieSettingsStyles();
                     });
-                });             
+                });
             </script>
         {% end_require_js %}
 
@@ -622,10 +585,9 @@
         {% set separatorColor = ei.siteSettings.legalWidget.separatorColor %}
         {% set fontSize = ei.siteSettings.legalWidget.fontSize %}
 
-        
         {% set cookieSettingsBtnBackgroundColor = '' %}
         {% set cookieSettingsBtnFontColor = '' %}
-        {% set cookieSettingsBtnFontSize = ''%}
+        {% set cookieSettingsBtnFontSize = '' %}
         {% if hasHSCookieSettings %}
             {% set cookieSettingsBtnBackgroundColor = ei.siteSettings.legalWidget.cookieSettingsBtnBackgroundColor %}
             {% set cookieSettingsBtnFontColor = ei.siteSettings.legalWidget.cookieSettingsBtnFontColor %}
@@ -633,49 +595,42 @@
         {% endif %}
 
         {% if hasHSCookieSettings %}
-            <style id = "ihs_legal_widget_cookie_settings_style">
-
+            <style id="ihs_legal_widget_cookie_settings_style">
                 .ihs-legal-widget-cookie-settings-btn-container {
                     margin-top:10px;
                 }
-
                 .ihs-legal-widget-cookie-settings-btn {
-                    background-color: {{cookieSettingsBtnBackgroundColor}}; 
+                    background-color: {{cookieSettingsBtnBackgroundColor}};
                     border: 0;
-                    border-radius: 3px; 
-                    padding: 8px 12px; 
-                    text-decoration: none; 
+                    border-radius: 3px;
+                    padding: 8px 12px;
+                    text-decoration: none;
                     color: {{cookieSettingsBtnFontColor}};
-                    font-family: inherit; 
-                    font-size: {{cookieSettingsBtnFontSize}}; 
-                    font-weight: normal; 
-                    text-align: left; 
+                    font-family: inherit;
+                    font-size: {{cookieSettingsBtnFontSize}};
+                    font-weight: normal;
+                    text-align: left;
                     text-shadow: none;
                 }
             </style>
         {% endif %}
 
-        <style id = "ihs_legal_widget_style">
-            
+        <style id="ihs_legal_widget_style">
             .ihs_legal_widget_link {
                 color: {{linkColor}} !important;
                 font-size:{{fontSize}};
             }
-
             .ihs_legal_widget_link:hover {
                 color: {{linkHoverColor}};
             }
-
             .ihs_legal_widget_link_separator {
                 color: {{separatorColor}};
             }
-
             .ihs_legal_widget {
                 padding-top:10px;
                 padding-bottom:10px;
             }
-
         </style>
-        
+
     {% endif %}
 {% endmacro %}

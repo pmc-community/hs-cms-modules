@@ -88,11 +88,11 @@
         {% set cssFiles = ihsResources.ihsRes[appName].cssFiles %}
 
         {# load app js#}
-        {# better to load js files with async:false, if true, sometimes (usually after clering cache and cookies), it doesn't load the apps and needs page refresh#}
+        {# better to load js files with async:false, if true, sometimes (usually after clearing cache and cookies), it doesn't load the apps and needs page refresh#}
         {% if jsFiles|length > 0 %}
             {% for scriptFile in jsFiles %}
                 {% set fileName  = jsFolder ~ scriptFile %}
-                {{ require_js(get_asset_url(fileName), { position: "footer", defer:true, async:false }) }} 
+                {{ require_js(get_asset_url(fileName), { type: "module", position: "footer", defer:true, async:false }) }} 
             {% endfor%}
         {% endif %}
 

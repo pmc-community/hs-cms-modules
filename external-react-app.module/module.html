@@ -366,7 +366,6 @@
 {% macro set_general_styles() %}
     {% require_css %}
         <style id = "ihs-era-style_{{ name }}_general_styles">
-            {% scope_css %}
                 #{{divForStyling}} {
     
                     padding-top: {{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.top.value }}{{ module.app_div_styles.app_div_styles_spacing.app_spacing.padding.top.units }};
@@ -384,7 +383,6 @@
     
                     background: {{module.app_div_styles.app_div_colors.app_div_background_color.color}}
                 }
-            {% end_scope_css %} 
         </style>
     {% end_require_css %}
 {% endmacro %}

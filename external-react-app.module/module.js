@@ -54,7 +54,7 @@ function commonStuff(mi) {
 
     $(document).ready(function () {
         if (typeof IHSBEStore !== 'undefined' && mi.appName !== 'no_app') {
-            module = new (new IHSBEStore.storeUtilities.ReduxConnectedClass(IHSERAModule))(mi);
+            module = new (new IHSBEStore.storeUtilities.connectClassToRedux(IHSERAModule, IHSBEStore))(mi);
         }
     });
 
@@ -214,7 +214,12 @@ class IHSERAModule {
                 appRootDiv: parentObject.mi.appRootDiv,
                 appOpenStatus: false
             };
-            parentObject.ihsHSActions.updateERAOpenStatus(appInfo)(parentObject.store.dispatch);
+            const action = {
+                type: 'IHS_HS_UPDATE_ERA_OPEN_STATUS',
+                payload: appInfo
+            }
+            parentObject.store.dispatch(action);
+            //parentObject.ihsHSActions.updateERAOpenStatus(appInfo)(parentObject.store.dispatch);
         });
 
         let cssValidSelector = [];
@@ -230,7 +235,13 @@ class IHSERAModule {
                 appRootDiv: parentObject.mi.appRootDiv,
                 appOpenStatus: true
             };
-            parentObject.ihsHSActions.updateERAOpenStatus(appInfo)(parentObject.store.dispatch);
+            const action = {
+                type: 'IHS_HS_UPDATE_ERA_OPEN_STATUS',
+                payload: appInfo
+            }
+            parentObject.store.dispatch(action);
+
+            //parentObject.ihsHSActions.updateERAOpenStatus(appInfo)(parentObject.store.dispatch);
         });
 
         $('.ihs_era_text_trigger').on('click', function () {
@@ -242,13 +253,24 @@ class IHSERAModule {
                     appRootDiv: parentObject.mi.appRootDiv,
                     appOpenStatus: true
                 };
-                parentObject.ihsHSActions.updateERAOpenStatus(appInfo)(parentObject.store.dispatch);
+                const action = {
+                    type: 'IHS_HS_UPDATE_ERA_OPEN_STATUS',
+                    payload: appInfo
+                }
+                parentObject.store.dispatch(action);
+
+                //parentObject.ihsHSActions.updateERAOpenStatus(appInfo)(parentObject.store.dispatch);
             }
         });
     }
 
     updateERAStatusInStore(mi) {
-        this.ihsHSActions.updateERASettings(mi)(this.store.dispatch);
+        const action = {
+            type: 'IHS_HS_UPDATE_ERA_SETTINGS',
+            payload: mi
+        }
+        this.store.dispatch(action);
+        //this.ihsHSActions.updateERASettings(mi)(this.store.dispatch);
     }
 
     getAppSettings(mi) {
@@ -378,7 +400,7 @@ function generalInfoToConsole(mi) {
             mi.editMode ?
                 '\n' + timestamp + 'Executing ERA HS module client script/edit mode' :
                 '\n' + timestamp + 'Executing ERA HS module client script/frontend',
-            "font-weight:700; color:#000000");
+            "font-weight:700");
         toConsole('External React App - module instance info:')
         toConsole(mi, '');
         toConsole('\n', '');
